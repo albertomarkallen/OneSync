@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/screens/homepage.dart';
+import 'package:onesync/navigation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,14 +8,18 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
+          // Add your theme customizations here
+          ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('OneSync'),
+        ),
+        bottomNavigationBar: Navigation(),
       ),
-      //Homepage
-      home: const Homepage(),
     );
   }
 }
