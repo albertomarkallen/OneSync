@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/screens/homescreen.dart';
+import 'package:onesync/screens/home_screen.dart';
+import 'package:onesync/screens/menu_screen.dart';
 
 class Navigation extends StatefulWidget {
   const Navigation({super.key});
@@ -28,6 +29,11 @@ class _NavigationState extends State<Navigation> {
     if (index == 0) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    }
+    if (index == 1) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => MenuScreen()),
       );
     }
     // Implement similar navigation for other screens as needed
