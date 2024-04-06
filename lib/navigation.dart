@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/screens/home_screen.dart';
 import 'package:onesync/screens/menu_screen.dart';
+import 'package:onesync/screens/history_screen.dart';
+import 'package:onesync/screens/order_screen.dart';
+import 'package:onesync/screens/profile_screen.dart';
 
 class Navigation extends StatefulWidget {
   const Navigation({super.key});
@@ -37,6 +40,21 @@ class _NavigationState extends State<Navigation> {
       );
     }
     // Implement similar navigation for other screens as needed
+    if (index == 2) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => OrderScreen()),
+      );
+    }
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HistoryScreen()),
+      );
+    }
+    if (index == 4) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => ProfileScreen()),
+      );
+    }
   }
 
   @override
