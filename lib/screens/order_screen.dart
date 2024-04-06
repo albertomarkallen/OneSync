@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:onesync/navigation.dart';
 
 class OrderScreen extends StatelessWidget {
   @override
@@ -13,6 +14,7 @@ class OrderScreen extends StatelessWidget {
           style: TextStyle(fontSize: 24.0),
         ),
       ),
+      bottomNavigationBar: Navigation(), // Add Navigation widget here
     );
   }
 }
