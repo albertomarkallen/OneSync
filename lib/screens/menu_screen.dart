@@ -1,20 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart'; // Import your navigation widget
-import 'package:flutter_routing/flutter_routing.dart';
-import 'package:onesync/screens/addproduct_screen.dart';
-
-class MenuItem {
-  final String name;
-  final double price;
-  final int stock;
-  final String imagePath;
-
-  MenuItem(
-      {required this.name,
-      required this.price,
-      required this.stock,
-      this.imagePath = 'assets/images/placeholder.png'});
-}
+import 'package:onesync/models/models.dart';
+import 'package:onesync/screens/productdetails_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   MenuScreen({Key? key}) : super(key: key);
@@ -25,17 +12,18 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   final List<MenuItem> _menuItems = [
-    MenuItem(name: 'Pizza', price: 10.99, stock: 8),
-    MenuItem(name: 'Burger', price: 8.99, stock: 12),
-    MenuItem(name: 'Salad', price: 6.99, stock: 17),
-    MenuItem(name: 'Pasta', price: 12.99, stock: 13),
-    MenuItem(name: 'Sandwich', price: 7.99, stock: 4),
-    // Add more items as needed
+    MenuItem(name: 'Pizza', price: 10.99, stock: 8, category: 'Main Dishes'),
+    MenuItem(name: 'Burger', price: 8.99, stock: 12, category: 'Main Dishes'),
+    MenuItem(name: 'Salad', price: 6.99, stock: 17, category: 'Main Dishes'),
+    MenuItem(name: 'Pasta', price: 12.99, stock: 13, category: 'Main Dishes'),
+    MenuItem(name: 'Sandwich', price: 7.99, stock: 4, category: 'Snacks'),
+    // Add more items with 'Snacks' and 'Beverages' categories
   ];
 
   // For search functionality
   List<MenuItem> _displayedMenuItems = [];
   final TextEditingController _searchController = TextEditingController();
+  String _selectedLabel = 'All'; // For keeping track of the active label
 
   @override
   void initState() {
@@ -49,13 +37,16 @@ class _MenuScreenState extends State<MenuScreen> {
     super.dispose();
   }
 
-  // Filter items based on search query
+  // Filter items based on search query or category
   void _filterMenuItems(String query) {
     setState(() {
-      _displayedMenuItems = _menuItems
-          .where(
-              (item) => item.name.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      _selectedLabel = query; // Update selected label
+      _displayedMenuItems = _menuItems.where((item) {
+        // Filtering logic
+        if (query == 'All') return true; // Show all items
+        return item.category != null &&
+            item.category.toLowerCase() == query.toLowerCase();
+      }).toList();
     });
   }
 
@@ -68,10 +59,10 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menu'),
+        title: Text(_selectedLabel), // Display current label
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () {
               // Show or toggle search bar
             },
@@ -79,7 +70,7 @@ class _MenuScreenState extends State<MenuScreen> {
           // ADD PRODUCT BUTTON
           IconButton(
             onPressed: _handleAddProduct,
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
           ),
         ],
       ),
@@ -90,8 +81,9 @@ class _MenuScreenState extends State<MenuScreen> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              onChanged: _filterMenuItems,
-              decoration: InputDecoration(
+              onChanged: (text) =>
+                  _filterMenuItems(text), // Update filtering with search
+              decoration: const InputDecoration(
                 hintText: 'Search',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
@@ -104,27 +96,56 @@ class _MenuScreenState extends State<MenuScreen> {
             child: Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children: const [
-                  TextButton(onPressed: null, child: Text('All')),
-                  TextButton(onPressed: null, child: Text('Label 1')),
-                  TextButton(onPressed: null, child: Text('Label 2')),
-                  TextButton(onPressed: null, child: Text('Label 3')),
+                children: [
+                  TextButton(
+                    onPressed: () => _filterMenuItems('All'),
+                    child: Text('All'),
+                    style: TextButton.styleFrom(
+                      foregroundColor:
+                          _selectedLabel == 'All' ? Colors.blue : Colors.black,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _filterMenuItems('Main Dishes'),
+                    child: Text('Main Dishes'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _selectedLabel == 'Main Dishes'
+                          ? Colors.blue
+                          : Colors.black,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _filterMenuItems('Snacks'),
+                    child: Text('Snacks'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _selectedLabel == 'Snacks'
+                          ? Colors.blue
+                          : Colors.black,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _filterMenuItems('Beverages'),
+                    child: Text('Beverages'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _selectedLabel == 'Beverages'
+                          ? Colors.blue
+                          : Colors.black,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          // GridView for menu items
+          // Display Products
           Expanded(
             child: GridView.builder(
-              padding: EdgeInsets.all(8.0),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              padding: const EdgeInsets.all(8.0),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2, // Change this for desired grid layout
-                // ... other grid configuration ...
               ),
               itemCount: _displayedMenuItems.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  // Add Product Button
                   return Card(
                     elevation: 2.0,
                     child: Padding(
@@ -137,47 +158,60 @@ class _MenuScreenState extends State<MenuScreen> {
                   );
                 } else {
                   final int itemIndex = index - 1;
-                  return Card(
-                    elevation: 2.0,
-                    child: Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Column(
-                        children: [
-                          // Image Placeholder (80%)
-                          Expanded(
-                            flex: 8, // 80% of the card's height
-                            child: Container(
-                              width: double.infinity, // Occupy full width
-                              color: Colors.grey[200],
-                              child: Icon(
-                                  Icons.image), // Replace with image loading
-                            ),
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailsScreen(
+                            product: _displayedMenuItems[itemIndex],
                           ),
-                          // Text Details (20%)
-                          Expanded(
-                            flex: 3, // 20% of the card's height
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(_displayedMenuItems[itemIndex].name,
-                                    style: TextStyle(fontSize: 12.0)),
-                                SizedBox(height: 4.0),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
+                        ),
+                      );
+                    },
+                    child: Card(
+                      elevation: 2.0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          children: [
+                            // Image Placeholder (80%)
+                            Expanded(
+                              flex: 8, // 80% of the card's height
+                              child: Container(
+                                width: double.infinity, // Occupy full width
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.image),
+                              ),
+                            ),
+                            // Text Details (20%)
+                            Expanded(
+                              flex: 3, // 20% of the card's height
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_displayedMenuItems[itemIndex].name,
+                                      style: const TextStyle(fontSize: 12.0)),
+                                  const SizedBox(height: 4.0),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
                                         '${_displayedMenuItems[itemIndex].stock} left',
-                                        style: TextStyle(fontSize: 10.0)),
-                                    Text(
+                                        style: const TextStyle(fontSize: 10.0),
+                                      ),
+                                      Text(
                                         '\₱${_displayedMenuItems[itemIndex].price.toStringAsFixed(2)}',
-                                        style: TextStyle(fontSize: 12.0)),
-                                  ],
-                                ),
-                              ],
+                                        style: const TextStyle(fontSize: 12.0),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
