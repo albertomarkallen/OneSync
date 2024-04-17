@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
@@ -11,24 +12,14 @@ class MenuScreen extends StatefulWidget {
 
 // Static Data for Menu Items
 class _MenuScreenState extends State<MenuScreen> {
-  final List<MenuItem> _menuItems = [
-    MenuItem(name: 'Pizza', price: 10.99, stock: 8, category: 'Main Dishes'),
-    MenuItem(name: 'Burger', price: 8.99, stock: 12, category: 'Main Dishes'),
-    MenuItem(name: 'Salad', price: 6.99, stock: 17, category: 'Main Dishes'),
-    MenuItem(name: 'Pasta', price: 12.99, stock: 13, category: 'Main Dishes'),
-    MenuItem(name: 'Sandwich', price: 7.99, stock: 4, category: 'Snacks'),
-    // Add more items with 'Snacks' and 'Beverages' categories
-  ];
-
-  // Displayed Menu Items
+  List<MenuItem> _menuItems = [];
   List<MenuItem> _displayedMenuItems = [];
   final TextEditingController _searchController = TextEditingController();
-  String _selectedLabel = 'All';
 
   @override
   void initState() {
     super.initState();
-    _displayedMenuItems = _menuItems;
+    _fetchMenuItems();
   }
 
   @override
@@ -36,6 +27,17 @@ class _MenuScreenState extends State<MenuScreen> {
     _searchController.dispose();
     super.dispose();
   }
+
+  Future<void> _fetchMenuItems() async {
+    var snapshot = await FirebaseFirestore.instance.collection('Menu').get();
+    var menuItems = snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
+    setState(() {
+      _menuItems = menuItems;
+      _displayedMenuItems = menuItems;
+    });
+  }
+
+  String _selectedLabel = 'All';
 
   // Filter Function on Search Bar
   void _filterMenuItems(String query) {

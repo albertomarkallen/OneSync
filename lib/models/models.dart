@@ -1,4 +1,6 @@
 // models.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MenuItem {
   final String name;
   final double price;
@@ -13,11 +15,14 @@ class MenuItem {
       this.imagePath = 'assets/images/placeholder.png',
       required this.category});
 
-  static List<String> getUniqueCategories(List<MenuItem> items) {
-    final categoriesSet = Set<String>();
-    items.forEach((item) {
-      if (item.category != null) categoriesSet.add(item.category!);
-    });
-    return categoriesSet.toList();
+  factory MenuItem.snapshot(DocumentSnapshot snapshot) {
+    var data = snapshot.data() as Map<String, dynamic>;
+    return MenuItem(
+        name: data['name'] ?? '',
+        price: (data['price'] as num).toDouble(),
+        stock: data['stock'] as int,
+        imagePath: data['imagePath'] ??
+            'assets/images/placeholder.png', // Future implementation
+        category: data['category'] ?? '');
   }
 }
