@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/addproduct_screen.dart';
-import 'package:onesync/screens/productdetails_screen.dart';
 
 void main() {
   runApp(const MyApp());
