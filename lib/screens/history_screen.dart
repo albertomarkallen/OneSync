@@ -67,23 +67,6 @@ class HistoryScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Summary (Optional)
-            /*
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '+',
-                  style: TextStyle(fontSize: 24.0, color: Colors.green),
-                ),
-                Text(
-                  '₱00.00',
-                  style: TextStyle(fontSize: 20.0),
-                ),
-              ],
-            ),
-            */
           ],
         ),
       ),

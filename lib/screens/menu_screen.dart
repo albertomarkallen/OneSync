@@ -1,56 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart'; // Import your navigation widget
-import 'package:onesync/models/models.dart';
-import 'package:onesync/screens/productdetails_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:onesync/navigation.dart';
 
 class MenuScreen extends StatefulWidget {
-  MenuScreen({Key? key}) : super(key: key);
+  const MenuScreen({Key? key}) : super(key: key);
 
   @override
   _MenuScreenState createState() => _MenuScreenState();
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  final List<MenuItem> _menuItems = [
-    MenuItem(name: 'Pizza', price: 10.99, stock: 8, category: 'Main Dishes'),
-    MenuItem(name: 'Burger', price: 8.99, stock: 12, category: 'Main Dishes'),
-    MenuItem(name: 'Salad', price: 6.99, stock: 17, category: 'Main Dishes'),
-    MenuItem(name: 'Pasta', price: 12.99, stock: 13, category: 'Main Dishes'),
-    MenuItem(name: 'Sandwich', price: 7.99, stock: 4, category: 'Snacks'),
-    // Add more items with 'Snacks' and 'Beverages' categories
-  ];
-
-  // For search functionality
-  List<MenuItem> _displayedMenuItems = [];
-  final TextEditingController _searchController = TextEditingController();
-  String _selectedLabel = 'All'; // For keeping track of the active label
+  // Store product data fetched from Firestore
+  List<Map<String, dynamic>> items = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _displayedMenuItems = _menuItems; // Initially display all items
+    _fetchItems(); // Load initial data
+    _listenForChanges(); // Set up real-time updates
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  // Fetch menu items from Firestore
+  Future<void> _fetchItems() async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('Menu').get();
+      items.clear();
+
+      for (final doc in snapshot.docs) {
+        items.add({
+          'category': doc.get('category'),
+          'name': doc.get('name'),
+          'price': doc.get('price'),
+          'stock': doc.get('stock'),
+        });
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+    } finally {
+      // Update loading state regardless of success or failure
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  // Filter items based on search query or category
-  void _filterMenuItems(String query) {
-    setState(() {
-      _selectedLabel = query; // Update selected label
-      _displayedMenuItems = _menuItems.where((item) {
-        // Filtering logic
-        if (query == 'All') return true; // Show all items
-        return item.category != null &&
-            item.category.toLowerCase() == query.toLowerCase();
-      }).toList();
+  // Listen for real-time database changes
+  void _listenForChanges() {
+    FirebaseFirestore.instance
+        .collection('Menu')
+        .snapshots()
+        .listen((snapshot) {
+      items.clear();
+      snapshot.docs.forEach((doc) {
+        items.add({
+          'category': doc.get('category'),
+          'name': doc.get('name'),
+          'price': doc.get('price'),
+          'stock': doc.get('stock'),
+        });
+      });
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 
-  // Function for handling product addition
+  // Function to navigate to 'Add Product' screen
   void _handleAddProduct() {
     Navigator.of(context).pushNamed('/addProduct');
   }
@@ -59,156 +76,69 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedLabel), // Display current label
+        title: const Text('OneSync'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Show or toggle search bar
-            },
-          ),
-          // ADD PRODUCT BUTTON
           IconButton(
             onPressed: _handleAddProduct,
             icon: const Icon(Icons.add),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (text) =>
-                  _filterMenuItems(text), // Update filtering with search
-              decoration: const InputDecoration(
-                hintText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          // Labels
-          SizedBox(
-            height: 35, // Adjust height as needed
-            child: Expanded(
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  TextButton(
-                    onPressed: () => _filterMenuItems('All'),
-                    child: Text('All'),
-                    style: TextButton.styleFrom(
-                      foregroundColor:
-                          _selectedLabel == 'All' ? Colors.blue : Colors.black,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _filterMenuItems('Main Dishes'),
-                    child: Text('Main Dishes'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _selectedLabel == 'Main Dishes'
-                          ? Colors.blue
-                          : Colors.black,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _filterMenuItems('Snacks'),
-                    child: Text('Snacks'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _selectedLabel == 'Snacks'
-                          ? Colors.blue
-                          : Colors.black,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _filterMenuItems('Beverages'),
-                    child: Text('Beverages'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _selectedLabel == 'Beverages'
-                          ? Colors.blue
-                          : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Display Products
-          Expanded(
-            child: GridView.builder(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : GridView.builder(
               padding: const EdgeInsets.all(8.0),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // Change this for desired grid layout
+                crossAxisCount: 2,
               ),
-              itemCount: _displayedMenuItems.length + 1,
+              itemCount: items.length + 1, // +1 for the 'Add Product' card
               itemBuilder: (context, index) {
                 if (index == 0) {
+                  // First item is the "Add Product" card
                   return Card(
                     elevation: 2.0,
                     child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: ElevatedButton(
+                      padding: const EdgeInsets.all(20.0),
+                      child: IconButton(
                         onPressed: _handleAddProduct,
-                        child: const Text('Add Product'),
+                        iconSize: 40.0,
+                        icon: const Icon(Icons.add),
                       ),
                     ),
                   );
                 } else {
+                  // Display product cards as before
                   final int itemIndex = index - 1;
                   return InkWell(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductDetailsScreen(
-                            product: _displayedMenuItems[itemIndex],
-                          ),
-                        ),
-                      );
+                      // Navigate to product details (To Follow yung Implementation)
                     },
                     child: Card(
                       elevation: 2.0,
                       child: Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Image Placeholder (80%)
-                            Expanded(
-                              flex: 8, // 80% of the card's height
-                              child: Container(
-                                width: double.infinity, // Occupy full width
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.image),
-                              ),
-                            ),
-                            // Text Details (20%)
-                            Expanded(
-                              flex: 3, // 20% of the card's height
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(_displayedMenuItems[itemIndex].name,
-                                      style: const TextStyle(fontSize: 12.0)),
-                                  const SizedBox(height: 4.0),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${_displayedMenuItems[itemIndex].stock} left',
-                                        style: const TextStyle(fontSize: 10.0),
-                                      ),
-                                      Text(
-                                        '\₱${_displayedMenuItems[itemIndex].price.toStringAsFixed(2)}',
-                                        style: const TextStyle(fontSize: 12.0),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                            Text(items[itemIndex]['name'],
+                                style: const TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8.0),
+                            Text('Category: ${items[itemIndex]['category']}'),
+                            const SizedBox(height: 8.0),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${items[itemIndex]['stock']} left',
+                                  style: const TextStyle(fontSize: 12.0),
+                                ),
+                                Text(
+                                  '\₱${items[itemIndex]['price'].toStringAsFixed(2)}',
+                                  style: const TextStyle(fontSize: 16.0),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -218,10 +148,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 }
               },
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Navigation(), // Your bottom navigation widget
+      bottomNavigationBar: Navigation(),
     );
   }
 }

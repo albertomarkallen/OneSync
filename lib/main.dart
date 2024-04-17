@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:onesync/firebase_options.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/addproduct_screen.dart';
+// ignore: unused_import
 import 'package:onesync/screens/productdetails_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

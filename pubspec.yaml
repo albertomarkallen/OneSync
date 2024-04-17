@@ -30,6 +30,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  firebase_core: ^2.30.0
+  firebase_auth: ^4.19.2
+  cloud_firestore: ^4.17.0 
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -42,6 +45,7 @@ dev_dependencies:
 
   flutter_routing: 0.1.11
   image_picker: ^0.8.4+1
+  intl:  ^0.19.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -60,7 +64,12 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
+  fonts:  # Poppins Font Declaration
+    - family: Poppins 
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
+        - asset: fonts/Poppins-Bold.ttf  
+          weight: 700 
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

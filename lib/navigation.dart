@@ -4,6 +4,7 @@ import 'package:onesync/screens/menu_screen.dart';
 import 'package:onesync/screens/history_screen.dart';
 import 'package:onesync/screens/order_screen.dart';
 import 'package:onesync/screens/profile_screen.dart';
+import 'package:onesync/screens/test_screen.dart';
 
 class Navigation extends StatefulWidget {
   const Navigation({super.key});
@@ -21,6 +22,7 @@ class _NavigationState extends State<Navigation> {
     Text('Order'),
     Text('History'),
     Text('Profile'),
+    Text('Test')
   ];
 
   void _onItemTapped(int index) {
@@ -53,6 +55,11 @@ class _NavigationState extends State<Navigation> {
     if (index == 4) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => ProfileScreen()),
+      );
+    }
+    if (index == 5) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => TestScreen()),
       );
     }
   }

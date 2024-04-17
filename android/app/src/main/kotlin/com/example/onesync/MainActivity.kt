@@ -1,4 +1,4 @@
-package com.example.onesync
+package com.thesis3.onesync
 
 import io.flutter.embedding.android.FlutterActivity
 
