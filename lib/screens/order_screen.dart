@@ -106,6 +106,79 @@ class _OrderScreenState extends State<OrderScreen> {
     return total.toInt();
   }
 
+  Future<void> _showConfirmationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Order'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Are you sure you want to place this order?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Confirm'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _submitOrder(); // Call function to submit order
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        OrderScreen(), // Navigate back to the same screen
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _submitOrder() async {
+    FirebaseFirestore db = FirebaseFirestore.instance;
+
+    // Fetch the last used transaction number from the database
+    DocumentSnapshot lastTransactionDoc =
+        await db.collection('Meta').doc('TransactionNumber').get();
+
+    int lastTransactionNumber = lastTransactionDoc.exists
+        ? lastTransactionDoc.get('number')
+        : 0; // If no document exists, start with 0
+
+    int nextTransactionNumber = lastTransactionNumber + 1;
+    String transactionId = 'Transaction$nextTransactionNumber';
+
+    Map<String, dynamic> orderData = {
+      'date': Timestamp.fromDate(DateTime.now()), // Adjust for GMT+8
+      'totalPrice': _calculateTotal(),
+    };
+
+    // Update the last used transaction number in the database
+    await db.collection('Meta').doc('TransactionNumber').set({
+      'number': nextTransactionNumber,
+    });
+
+    await db
+        .collection('Transactions')
+        .doc(transactionId)
+        .set(orderData)
+        .then((_) => print('Order successfully submitted!'))
+        .catchError((error) => print('Failed to submit order: $error'));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -203,9 +276,7 @@ class _OrderScreenState extends State<OrderScreen> {
                         style: const TextStyle(fontSize: 18.0),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          // Implement order submission logic
-                        },
+                        onPressed: _showConfirmationDialog,
                         child: const Text('Place Order'),
                       ),
                     ],
