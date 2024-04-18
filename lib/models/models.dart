@@ -1,13 +1,28 @@
+// models.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MenuItem {
   final String name;
-  final String category;
-  final int price;
+  final double price;
   final int stock;
+  final String imagePath;
+  final String category;
 
-  MenuItem({
-    required this.name,
-    required this.category,
-    required this.price,
-    required this.stock,
-  });
+  MenuItem(
+      {required this.name,
+      required this.price,
+      required this.stock,
+      this.imagePath = 'assets/images/placeholder.png',
+      required this.category});
+
+  factory MenuItem.snapshot(DocumentSnapshot snapshot) {
+    var data = snapshot.data() as Map<String, dynamic>;
+    return MenuItem(
+        name: data['name'] ?? '',
+        price: (data['price'] as num).toDouble(),
+        stock: data['stock'] as int,
+        imagePath: data['imagePath'] ??
+            'assets/images/placeholder.png', // Future implementation
+        category: data['category'] ?? '');
+  }
 }
