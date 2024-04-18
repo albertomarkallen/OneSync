@@ -30,10 +30,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -47,28 +44,37 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAsYnr672OO_1xoSGN9hmjqbXBByBI8gh0',
-    appId: '1:619603998562:web:8093595a05ed26bdf19e3b',
-    messagingSenderId: '619603998562',
-    projectId: 'onesync-3df51',
-    authDomain: 'onesync-3df51.firebaseapp.com',
-    storageBucket: 'onesync-3df51.appspot.com',
+    apiKey: 'AIzaSyBW4U268NXJZ2VEkNC_58Zb763zjR0J6hg',
+    appId: '1:1055546308486:web:2591f2fdde838aad425e07',
+    messagingSenderId: '1055546308486',
+    projectId: 'onesync-b234d',
+    authDomain: 'onesync-b234d.firebaseapp.com',
+    storageBucket: 'onesync-b234d.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAFAg07_or_rgl4EadUPZ3GkzBFxkH9bp0',
-    appId: '1:619603998562:android:bc45931d37f08235f19e3b',
-    messagingSenderId: '619603998562',
-    projectId: 'onesync-3df51',
-    storageBucket: 'onesync-3df51.appspot.com',
+    apiKey: 'AIzaSyAjzzVsewvrDwvYG9urLB8l2F7cpRqbn5A',
+    appId: '1:1055546308486:android:19f1b31430a7bec8425e07',
+    messagingSenderId: '1055546308486',
+    projectId: 'onesync-b234d',
+    storageBucket: 'onesync-b234d.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCVhppamG4OP7C4sp8mZxo_8ixWqWdsPcE',
-    appId: '1:619603998562:ios:639fb1fdef3d9935f19e3b',
-    messagingSenderId: '619603998562',
-    projectId: 'onesync-3df51',
-    storageBucket: 'onesync-3df51.appspot.com',
+    apiKey: 'AIzaSyDPA0c4zEcUrhvjUo0dMCaSxBn-Dths73k',
+    appId: '1:1055546308486:ios:2230c43233fab82a425e07',
+    messagingSenderId: '1055546308486',
+    projectId: 'onesync-b234d',
+    storageBucket: 'onesync-b234d.appspot.com',
     iosBundleId: 'com.thesis3.onesync',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBW4U268NXJZ2VEkNC_58Zb763zjR0J6hg',
+    appId: '1:1055546308486:web:95b76b2d8465dd60425e07',
+    messagingSenderId: '1055546308486',
+    projectId: 'onesync-b234d',
+    authDomain: 'onesync-b234d.firebaseapp.com',
+    storageBucket: 'onesync-b234d.appspot.com',
   );
 }
