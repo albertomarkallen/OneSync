@@ -1,15 +1,15 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/firebase_options.dart';
 import 'package:onesync/navigation.dart';
+// ignore: unused_import
+import 'package:onesync/screens/product_details_screen.dart';
 import 'package:onesync/screens/add_product_screen.dart';
-import 'package:onesync/screens/utils.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await signInUserAnon();
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -19,7 +19,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        '/addProduct': (context) => const AddProductScreen(),
+        '/addProduct': (context) => AddProductScreen(),
+        
+        
         // Other routes...
       },
       theme: ThemeData(
@@ -29,7 +31,7 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('OneSync'),
         ),
-        bottomNavigationBar: const Navigation(),
+        bottomNavigationBar: Navigation(),
       ),
     );
   }
