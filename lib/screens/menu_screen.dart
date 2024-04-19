@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
+import 'package:onesync/screens/product_details_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({Key? key}) : super(key: key);
@@ -16,6 +19,8 @@ class _MenuScreenState extends State<MenuScreen> {
   List<MenuItem> _displayedMenuItems = [];
   final TextEditingController _searchController = TextEditingController();
 
+  final NumberFormat _currencyFormatter =
+      NumberFormat.currency(locale: 'fil', symbol: '₱');
   @override
   void initState() {
     super.initState();
@@ -62,6 +67,32 @@ class _MenuScreenState extends State<MenuScreen> {
   // Add Product
   void _handleAddProduct() {
     Navigator.of(context).pushNamed('/addProduct');
+  }
+
+  // Widget for Add Product Button
+  Widget _addProductButton() {
+    return Padding(
+      padding: const EdgeInsets.all(14.0),
+      child: SizedBox(
+        width: 25,
+        height: 25,
+        child: Ink(
+          decoration: ShapeDecoration(
+            color: Color(0xFF4196F0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6.24),
+            ),
+          ),
+          child: IconButton(
+            onPressed: _handleAddProduct,
+            icon: const Icon(Icons.add, color: Colors.white),
+            padding: EdgeInsets.zero,
+            iconSize: 20,
+            alignment: Alignment.center,
+          ),
+        ),
+      ),
+    );
   }
 
   // Search Bar Widget
@@ -145,7 +176,11 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget _menuList(BuildContext context, MenuItem item) {
     return InkWell(
       onTap: () {
-        _filterMenuItems(item.category);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(product: item),
+          ),
+        );
       },
       child: Container(
         width: 110,
@@ -217,7 +252,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             color: Color(
                                 0xFF0663C7), // Consider defining this color in your theme settings
                             fontSize: 10,
-                            fontFamily: 'Poppins',
+                            fontFamily: 'Inter',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -239,14 +274,66 @@ class _MenuScreenState extends State<MenuScreen> {
       child: GridView.builder(
         padding: const EdgeInsets.all(16.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
+          crossAxisCount: 3, // Change cross axis count as needed
           crossAxisSpacing: 6.0,
           mainAxisSpacing: 8.0,
           childAspectRatio: 0.88,
         ),
-        itemCount: _displayedMenuItems.length,
+        itemCount:
+            _displayedMenuItems.length + 1, // +1 for the 'Add Product' card
         itemBuilder: (context, index) {
-          return _menuList(context, _displayedMenuItems[index]);
+          if (index == 0) {
+            return DottedBorder(
+              color: const Color(0xFF4196F0),
+              dashPattern: const [6, 3],
+              strokeWidth: 1,
+              radius: const Radius.circular(5.23),
+              borderType: BorderType.RRect,
+              child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Card(
+                    color: const Color(0xFFEEF5FC),
+                    elevation: 0,
+                    child: IconButton(
+                      onPressed: _handleAddProduct,
+                      iconSize:
+                          30.0, // This property might not be necessary depending on your layout intentions.
+                      color: Colors.white,
+                      icon: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Container(
+                            width: 20.58,
+                            height: 20.58,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4196F0),
+                              borderRadius: BorderRadius.circular(6.24),
+                            ),
+                            child: const Icon(Icons.add, size: 12.12),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              'Add Product',
+                              style: TextStyle(
+                                color: Color(0xFF4196F0),
+                                fontSize: 9.14,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  )),
+            );
+          } else {
+            return _menuList(context, _displayedMenuItems[index - 1]);
+          }
         },
       ),
     );
@@ -273,7 +360,7 @@ class _MenuScreenState extends State<MenuScreen> {
               height: 25,
               child: Ink(
                 decoration: ShapeDecoration(
-                  color: Color(0xFF4196F0),
+                  color: const Color(0xFF4196F0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6.24),
                   ),
