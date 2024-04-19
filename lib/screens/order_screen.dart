@@ -252,21 +252,25 @@ class _OrderScreenState extends State<OrderScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 8),
-                  Text(
-                    'Stock: ${item['stock']}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '₱${item['price']}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.blue[800],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Stock: ${item['stock']}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        '₱${item['price']}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.blue[800],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -313,6 +317,15 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate the bottom padding for the GridView,
+    // taking into account the height of the bottomSheet if it exists.
+    double bottomPadding = 0;
+    Widget? totalDisplay = _buildTotalDisplay(context);
+    if (totalDisplay != null) {
+      // You can adjust this value if the bottom sheet is larger or smaller
+      bottomPadding = 60.0;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order'),
@@ -324,7 +337,8 @@ class _OrderScreenState extends State<OrderScreen> {
               ? const Center(child: CircularProgressIndicator())
               : Expanded(
                   child: GridView.builder(
-                    padding: const EdgeInsets.all(4.0),
+                    padding: EdgeInsets.fromLTRB(
+                        4.0, 4.0, 4.0, bottomPadding), // Adjusted padding
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -339,86 +353,88 @@ class _OrderScreenState extends State<OrderScreen> {
         ],
       ),
       bottomNavigationBar: Navigation(),
-      bottomSheet: _buildTotalDisplay(context),
+      bottomSheet: totalDisplay, // Use the variable here
     );
   }
 
- Widget? _buildTotalDisplay(BuildContext context) {
-  int totalItems = cart.values.fold(0, (previousValue, quantity) => previousValue + quantity);
-  String itemsText = totalItems == 1 ? 'Item' : 'Items';
+  Widget? _buildTotalDisplay(BuildContext context) {
+    int totalItems = cart.values
+        .fold(0, (previousValue, quantity) => previousValue + quantity);
+    String itemsText = totalItems == 1 ? 'Item' : 'Items';
 
-  if (totalItems > 0) {
-    return Container(
-      color: Colors.blue[700], // Use a deep blue color for the background
-      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$totalItems $itemsText',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
+    if (totalItems > 0) {
+      return Container(
+        color: Colors.blue[700], // Use a deep blue color for the background
+        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$totalItems $itemsText',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Total: ₱${_calculateTotal()}',
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CartScreen(cart: cart, items: items),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.blue[800],
+                  backgroundColor: Colors.white, // Button color
+                  elevation: 0, // Removes shadow for a flat design
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(8), // Adjust the radius as needed
                   ),
                 ),
-                Text(
-                  'Total: ₱${_calculateTotal()}',
-                  style: TextStyle(
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'View Order',
+                        style: TextStyle(color: Colors.blue[800]), // Text color
+                      ),
+                      Icon(
+                        Icons.arrow_right_alt,
+                        color: Colors.blue[800],
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CartScreen(cart: cart, items: items),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.blue[800],
-                backgroundColor: Colors.white, // Button color
-                elevation: 0, // Removes shadow for a flat design
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8), // Adjust the radius as needed
                 ),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6.0),
-                child: Row(
-                  children: [
-                    Text(
-                      'View Order',
-                      style: TextStyle(color: Colors.blue[800]), // Text color
-                    ),
-                    Icon(
-                      Icons.arrow_right_alt,
-                      color: Colors.blue[800],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  } else {
-    return null; // Return null when there are no items in the cart
+      );
+    } else {
+      return null; // Return null when there are no items in the cart
+    }
   }
-}
-
 
   // Add this part for the total price
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart';
+import 'package:onesync/navigation.dart';  // Import your 'navigation.dart' file
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:onesync/screens/payment_screen.dart'; 
 
 class CartScreen extends StatefulWidget {
   final Map<String, int> cart;
   final List<Map<String, dynamic>> items;
 
-  const CartScreen({Key? key, required this.cart, required this.items})
-      : super(key: key);
+  const CartScreen({Key? key, required this.cart, required this.items}) : super(key: key);
 
   @override
   _CartScreenState createState() => _CartScreenState();
@@ -16,8 +16,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   num _calculateTotal() {
     return widget.cart.entries
-        .map((entry) =>
-            widget.items
+        .map((entry) => widget.items
                 .firstWhere((item) => item['name'] == entry.key)['price'] *
             entry.value)
         .fold(0, (previousValue, element) => previousValue + element);
@@ -40,8 +39,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCheckoutButton(BuildContext context) {
-    int totalItems = widget.cart.values
-        .fold(0, (previousValue, quantity) => previousValue + quantity);
+    int totalItems = widget.cart.values.fold(0, (previousValue, quantity) => previousValue + quantity);
     num totalPrice = _calculateTotal();
 
     return totalItems > 0
@@ -61,21 +59,20 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () => _submitOrder(context),
+                    onPressed: () => _goToWaitForRfid(context),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.blue[800],
-                      backgroundColor: Colors.white, // Button color
-                      elevation: 0, // Removes shadow for a flat design
+                      backgroundColor: Colors.white, 
+                      elevation: 0, 
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            8), // Adjust the radius as needed
+                        borderRadius: BorderRadius.circular(8), 
                       ),
                     ),
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6.0),
                       child: Text(
                         'Pay Now',
-                        style: TextStyle(color: Colors.blue[800]), // Text color
+                        style: TextStyle(color: Colors.blue[800]),
                       ),
                     ),
                   ),
@@ -86,17 +83,32 @@ class _CartScreenState extends State<CartScreen> {
         : SizedBox.shrink(); // Return an empty container if no items
   }
 
+  // Navigate to a new page to wait for RFID
+void _goToWaitForRfid(BuildContext context) async {
+  num totalPrice = _calculateTotal(); 
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PaymentScreenPage(
+          totalPrice: totalPrice,
+          cart: widget.cart, // Pass the cart data
+      ),
+    ),
+  );
+    // Proceed to order submission
+  }
+
   Future<void> _submitOrder(BuildContext context) async {
     FirebaseFirestore db = FirebaseFirestore.instance;
     int total = _calculateTotal().toInt();
 
-    // Fetch the last used transaction number from the database
+    // Retrieve the last used transaction number from the database
     DocumentSnapshot lastTransactionDoc =
         await db.collection('Meta').doc('TransactionNumber').get();
 
-    int lastTransactionNumber =
-        lastTransactionDoc.exists ? lastTransactionDoc.get('number') : 0;
-
+    int lastTransactionNumber = lastTransactionDoc.exists
+        ? lastTransactionDoc.get('number')
+        : 0;
     int nextTransactionNumber = lastTransactionNumber + 1;
     String transactionId = 'Transaction$nextTransactionNumber';
 
@@ -108,7 +120,7 @@ class _CartScreenState extends State<CartScreen> {
           .toList(),
     };
 
-    // Update the last used transaction number in the database
+    // Update last used transaction number
     await db.collection('Meta').doc('TransactionNumber').set({
       'number': nextTransactionNumber,
     });
@@ -119,16 +131,9 @@ class _CartScreenState extends State<CartScreen> {
         .set(orderData)
         .then((_) {
       print('Order successfully submitted!');
-      Navigator.pop(
-          context); // Optionally navigate back after submitting the order
+      Navigator.pop(context); 
     }).catchError((error) {
-      print('Failed to submit order: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to submit order. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // ... Error handling ...
     });
   }
 
@@ -154,9 +159,7 @@ class _CartScreenState extends State<CartScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(itemName),
-                      SizedBox(
-                          height:
-                              4), // Add some vertical space between product name and subtotal
+                      SizedBox(height: 4), 
                       Text('Subtotal: ₱${subtotal.toStringAsFixed(2)}'),
                     ],
                   ),
@@ -167,10 +170,9 @@ class _CartScreenState extends State<CartScreen> {
                         onPressed: () => _decrementQuantity(itemName),
                         icon: Icon(Icons.remove),
                       ),
-                      SizedBox(width: 8), // Add some space between the buttons
-                      Text(itemQuantity
-                          .toString()), // Show quantity here if needed
-                      SizedBox(width: 8), // Add some space between the buttons
+                      SizedBox(width: 8), 
+                      Text(itemQuantity.toString()), 
+                      SizedBox(width: 8), 
                       IconButton(
                         onPressed: () => _incrementQuantity(itemName),
                         icon: Icon(Icons.add),
@@ -181,11 +183,10 @@ class _CartScreenState extends State<CartScreen> {
               },
             ),
           ),
-          _buildCheckoutButton(
-              context), // Place this where you want the button to appear
+          _buildCheckoutButton(context),
         ],
       ),
-      bottomNavigationBar: Navigation(),
+      bottomNavigationBar: Navigation(), 
     );
   }
 }
