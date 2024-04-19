@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/utils.dart';
@@ -18,6 +20,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  List<Reference> uploadedFiles = [];
+  File? _uploadedImageFile;
 
   @override
   void dispose() {
@@ -28,31 +32,54 @@ class _AddProductScreenState extends State<AddProductScreen> {
     super.dispose();
   }
 
+  // Make sure to handle the async operations properly and manage state changes.
   Future<void> _addProduct(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       try {
-        await signInUserAnon();
-        final File? imageFile = await getImageFromGallery(context);
-        if (imageFile != null) {
-          // Add image handling code here (e.g., upload to Firebase Storage)
+        // Sign in the user anonymously
+        // await signInUserAnon();
+        // Get the current user's ID
+        String userID = FirebaseAuth.instance.currentUser!.uid;
+        String productName = _nameController.text;
+        String docID = productName.toString();
+        // Define the path to the user's product subcollection
+        var userProductsRef = FirebaseFirestore.instance
+            .collection('Menu') // Main collection
+            .doc(userID) // Document for each user
+            .collection('vendorProducts') // Subcollection for user's products
+            .doc(docID);
 
-          await FirebaseFirestore.instance
-              .collection('Menu')
-              .doc(_nameController.text.trim())
-              .set({
-            'name': _nameController.text.trim(),
-            'category': _categoryController.text.trim(),
-            'stock': int.parse(_stockController.text.trim()),
-            'price': int.parse(_priceController.text.trim()),
-            // Add a reference to the image URL here if needed
-          });
-
-          Navigator.pop(context); // Navigate back after successful addition
-        } else {
-          print('No image selected');
-        }
+        // Add a new product to the user's subcollection
+        await userProductsRef.set({
+          'name': productName,
+          'category': _categoryController.text,
+          'stock': int.parse(_stockController.text),
+          'price': int.parse(_priceController.text),
+          'imageUrl': '',
+        }).then((documentReference) async {
+          if (_uploadedImageFile != null) {
+            bool fileUploaded = await uploadFileForUser(_uploadedImageFile!);
+            if (fileUploaded) {
+              await userProductsRef
+                  .update({'imageUrl': 'uploaded_image_url_here'});
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Product added successfully')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Error uploading image')),
+              );
+            }
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Product added successfully')),
+            );
+          }
+        });
       } catch (e) {
-        print('Error adding product: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error adding product')),
+        );
       }
     }
   }
@@ -70,40 +97,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               SizedBox(
                 width: 195,
                 height: 48,
-                child: FloatingActionButton(
-                  onPressed: () async {
-                    final File? selectedImage =
-                        await getImageFromGallery(context);
-                    if (selectedImage != null) {
-                      print(selectedImage); // Future Implementation of Logic
-                    } else {
-                      print('No image selected');
-                    }
-                  },
-                  backgroundColor: const Color(0xFF0671E0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 4),
-                        Text(
-                          'Upload Image',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
-                            height: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                child: _uploadImage(), // Using the custom FAB for image upload
               ),
               const SizedBox(height: 16.0),
               TextFormField(
@@ -132,23 +126,58 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  Widget _uploadImage(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () async {
-        File? selectedImage = await getImageFromGallery(context);
-        if (selectedImage != null) {
-          bool succes = await uploadFileForUser(selectedImage);
-          print(succes);
-        } else {
-          print('No image selected');
-        }
-      },
-      child: const Text('Upload Image'),
+  Widget _uploadImage() {
+    return Column(
+      children: [
+        if (_uploadedImageFile != null)
+          Image.file(_uploadedImageFile!, fit: BoxFit.cover),
+        Container(
+          width: 200,
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: ShapeDecoration(
+            color: const Color(0xFF0671E0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: InkWell(
+            onTap: () async {
+              File? selectedImage = await getImageFromGallery(context);
+              if (selectedImage != null) {
+                setState(() {
+                  _uploadedImageFile = selectedImage;
+                });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No image selected')));
+              }
+            },
+            child: const Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(Icons.add, color: Colors.white),
+                  SizedBox(width: 4),
+                  Text(
+                    'Upload Image',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
 // Helper method to build a number form field
-
   Widget _buildNumberFormField(TextEditingController controller, String label) {
     return TextFormField(
       controller: controller,

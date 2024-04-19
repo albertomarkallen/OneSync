@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
@@ -15,6 +16,7 @@ class MenuScreen extends StatefulWidget {
 
 // Static Data for Menu Items
 class _MenuScreenState extends State<MenuScreen> {
+  List<Reference> uploadedFiles = [];
   List<MenuItem> _menuItems = [];
   List<MenuItem> _displayedMenuItems = [];
   final TextEditingController _searchController = TextEditingController();

@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:onesync/firebase_options.dart';
-import 'package:onesync/navigation.dart';
-// ignore: unused_import
-import 'package:onesync/screens/product_details_screen.dart';
-import 'package:onesync/screens/add_product_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:onesync/authenticationWrapper.dart';
+import 'package:onesync/firebase_options.dart';
+import 'package:onesync/screens/add_product_screen.dart';
+import 'package:onesync/screens/login.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,26 +12,18 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
         '/addProduct': (context) => AddProductScreen(),
-        
-        
-        // Other routes...
+        '/Login': (context) => LoginScreen(),
       },
       theme: ThemeData(
           // Add your theme customizations here
           ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('OneSync'),
-        ),
-        bottomNavigationBar: Navigation(),
-      ),
+      home:
+          AuthenticationWrapper(), // Use AuthenticationWrapper as the first screen
     );
   }
 }
