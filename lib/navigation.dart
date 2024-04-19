@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:onesync/screens/history_screen.dart';
 import 'package:onesync/screens/home_screen.dart';
 import 'package:onesync/screens/menu_screen.dart';
-import 'package:onesync/screens/history_screen.dart';
 import 'package:onesync/screens/order_screen.dart';
 import 'package:onesync/screens/profile_screen.dart';
 import 'package:onesync/screens/test_screen.dart';

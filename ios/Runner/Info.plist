@@ -27,8 +27,16 @@
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
+	<key>NSPhotoLibraryUsageDescription</key>
+    <string>Privacy - Photo Library Usage Description</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Motion usage description</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>NSPhotoLibraryAddUsageDescription</string>
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Our application needs access to your photo gallery to select images.</string>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
