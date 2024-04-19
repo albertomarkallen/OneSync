@@ -26,43 +26,31 @@ class _NavigationState extends State<Navigation> {
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  setState(() {
+    _selectedIndex = index;
+  });
 
-    // Navigate to the selected screen
-    if (index == 0) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    }
-    if (index == 1) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MenuScreen()),
-      );
-    }
-    // Implement similar navigation for other screens as needed
-    if (index == 2) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => OrderScreen()),
-      );
-    }
-    if (index == 3) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HistoryScreen()),
-      );
-    }
-    if (index == 4) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => ProfileScreen()),
-      );
-    }
-    if (index == 5) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => TestScreen()),
-      );
-    }
-  }
+  // Navigate to the selected screen without replacing the current one
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (context) {
+      if (index == 0) {
+        return HomeScreen();
+      } else if (index == 1) {
+        return MenuScreen();
+      } else if (index == 2) {
+        return OrderScreen();
+      } else if (index == 3) {
+        return HistoryScreen();
+      } else if (index == 4) {
+        return ProfileScreen();
+      } else if (index == 5) {
+        return TestScreen();
+      }
+      return HomeScreen(); // Default to HomeScreen if index is out of bounds
+    }),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
