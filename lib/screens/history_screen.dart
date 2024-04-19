@@ -1,121 +1,85 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart'; // Import your navigation widget
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:onesync/navigation.dart';
+import 'package:intl/intl.dart'; 
 
 class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Transaction History'),
+        title: const Text('Order History'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '9:41',
-                  style: const TextStyle(fontSize: 12.0),
-                ),
-                Text(
-                  'Transaction History',
-                  style: const TextStyle(
-                      fontSize: 18.0, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('Transactions')
+            .orderBy('date', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error fetching data'));
+          } else if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          } else {
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                DocumentSnapshot orderDoc = snapshot.data!.docs[index];
+                Timestamp timestamp = orderDoc.get('date');
+                 DateTime orderDate = timestamp.toDate().add(const Duration(hours: 8));
 
-            // Title Row
-            Row(
-              children: [
-                Text(
-                  'Title',
-                  style: const TextStyle(
-                      fontSize: 14.0, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                Text(
-                  'Reference Number',
-                  style: const TextStyle(
-                      fontSize: 14.0, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Amount',
-                  style: const TextStyle(
-                      fontSize: 14.0, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
-
-            // Transaction Items (Replace with actual data)
-            Expanded(
-              // Added Expanded to make the ListView scrollable
-              child: ListView.builder(
-                shrinkWrap: true, // Makes the list view flexible in height
-                itemCount: 10, // Replace with the number of transactions
-                itemBuilder: (context, index) => TransactionItem(
-                  referenceNumber: '1234567890',
-                  amount: 500.00,
-                  date: 'Aug 20, 2023',
-                  time: '8:23 PM',
-                ),
-              ),
-            ),
-          ],
-        ),
+                return Card(
+                  margin: const EdgeInsets.all(12.0), 
+                  elevation: 2.0, 
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row( // Main Row divides the layout
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded( // Expanded for flexible spacing
+                          child: Column( 
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${orderDoc.id}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.0, 
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${DateFormat('yyyy-MM-dd').format(orderDate)}',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded( 
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end, // Align right
+                            children: [
+                              Text(
+                                '₱${orderDoc.get('totalPrice')}',
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${DateFormat('hh:mm a').format(orderDate)}',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        },
       ),
-      bottomNavigationBar: Navigation(), // Your navigation widget
-    );
-  }
-}
-
-class TransactionItem extends StatelessWidget {
-  final String referenceNumber;
-  final double amount;
-  final String date;
-  final String time;
-
-  TransactionItem({
-    required this.referenceNumber,
-    required this.amount,
-    required this.date,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0), // Add padding for spacing
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Align left
-              children: [
-                Text(
-                  referenceNumber,
-                  style: const TextStyle(fontSize: 14.0),
-                ),
-                Text(
-                  '$date $time',
-                  style: const TextStyle(fontSize: 12.0),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            'Php ${amount.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 14.0),
-          ),
-        ],
-      ),
+      bottomNavigationBar: Navigation(),
     );
   }
 }
