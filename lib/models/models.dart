@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MenuItem {
   final String name;
-  final double price;
+  final int price;
   final int stock;
   final String imagePath;
   final String category;
@@ -19,7 +19,7 @@ class MenuItem {
     var data = snapshot.data() as Map<String, dynamic>;
     return MenuItem(
         name: data['name'] ?? '',
-        price: (data['price'] as num).toDouble(),
+        price: (data['price'] as num).toInt(),
         stock: data['stock'] as int,
         imagePath: data['imagePath'] ??
             'assets/images/placeholder.png', // Future implementation
