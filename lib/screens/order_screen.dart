@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/cart_screen.dart';
+import 'package:onesync/models/models.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -11,22 +13,20 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  final List<Map<String, dynamic>> items = [];
+  List<MenuItem> items = [];
+  List<Map<String, dynamic>> convertItemsToMap(List<MenuItem> items) {
+  return items.map((item) => {
+    'name': item.name,
+    'price': item.price,
+    'stock': item.stock,
+    'imageUrl': item.imageUrl,
+    'category': item.category
+  }).toList();
+}
   Map<String, int> cart = {};
   bool isLoading = true;
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> displayedItems = [];
-
-  int _calculateTotal() {
-    int total = 0;
-    cart.forEach((key, quantity) {
-      final item = items.firstWhere((item) => item['name'] == key);
-      int itemTotal =
-          (item['price'] * quantity).round(); // Round to the nearest integer
-      total += itemTotal;
-    });
-    return total;
-  }
+  List<MenuItem> displayedItems = [];
 
   @override
   void initState() {
@@ -42,30 +42,36 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> _fetchItems() async {
     try {
-      QuerySnapshot querySnapshot =
-          await FirebaseFirestore.instance.collection('Menu').get();
+      String userID = FirebaseAuth.instance.currentUser!.uid;
+      var snapshot = await FirebaseFirestore.instance
+          .collection('Menu')
+          .doc(userID)
+          .collection('vendorProducts')
+          .get();
 
-      final List<Map<String, dynamic>> fetchedItems =
-          querySnapshot.docs.map((doc) {
-        return {
-          'name': doc.get('name'),
-          'price': doc.get('price'),
-          'stock': doc.get('stock'),
-          'inCart': false, // Add a flag to track if item is in cart
-          'quantity': 0, // Add quantity for each item
-        };
-      }).toList();
+      if (snapshot.docs.isNotEmpty) {
+        var fetchedItems = snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
 
-      setState(() {
-        items.addAll(fetchedItems);
-        displayedItems = List.from(fetchedItems);
-        isLoading = false;
-      });
+        setState(() {
+          items = fetchedItems;
+          displayedItems = List.from(fetchedItems);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No items found')),
+          );
+        });
+      }
     } catch (e) {
       setState(() {
         isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching items: $e')),
+        );
       });
-      print('Error fetching data: $e');
     }
   }
 
@@ -73,125 +79,39 @@ class _OrderScreenState extends State<OrderScreen> {
     String lowerCaseQuery = query.toLowerCase();
     setState(() {
       displayedItems = items.where((item) {
-        return item['name'].toLowerCase().contains(lowerCaseQuery);
+        return item.name.toLowerCase().contains(lowerCaseQuery);
       }).toList();
     });
   }
 
-  void _addToCart(int index) {
+  void _addToCart(MenuItem item) {
     setState(() {
-      if (items[index]['stock'] > 0) {
-        String productId = items[index]['name']; // Assuming name is unique ID
-        items[index]['inCart'] = true;
-        items[index]['quantity'] = 1;
-        cart[productId] = 1;
+      if (item.stock > 0) {
+        cart[item.name] = (cart[item.name] ?? 0) + 1;
+        item.stock--;
       }
     });
   }
 
-  void _removeFromCart(int index) {
+  void _removeFromCart(MenuItem item) {
     setState(() {
-      String productId = items[index]['name'];
-      items[index]['inCart'] = false;
-      items[index]['quantity'] = 0;
-      cart.remove(productId);
-    });
-  }
-
-  void _incrementQuantity(int index) {
-    setState(() {
-      String productId = items[index]['name'];
-      if (items[index]['stock'] > cart[productId]!) {
-        cart[productId] = (cart[productId] ?? 0) + 1;
-        items[index]['quantity'] = cart[productId]!;
-      }
-    });
-  }
-
-  void _decrementQuantity(int index) {
-    setState(() {
-      String productId = items[index]['name'];
-      if (cart[productId]! > 0) {
-        cart[productId] = (cart[productId] ?? 0) - 1;
-        items[index]['quantity'] = cart[productId]!;
-        if (cart[productId] == 0) {
-          _removeFromCart(index);
+      if (cart[item.name]! > 0) {
+        cart[item.name] = (cart[item.name] ?? 0) - 1;
+        if (cart[item.name] == 0) {
+          cart.remove(item.name);
         }
+        item.stock++;
       }
     });
   }
 
-  Future<void> _showConfirmationDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // User must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Order'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: const <Widget>[
-                Text('Are you sure you want to place this order?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-            TextButton(
-              child: const Text('Confirm'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _submitOrder(); // Call function to submit order
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        OrderScreen(), // Navigate back to the same screen
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _submitOrder() async {
-    FirebaseFirestore db = FirebaseFirestore.instance;
-
-    // Fetch the last used transaction number from the database
-    DocumentSnapshot lastTransactionDoc =
-        await db.collection('Meta').doc('TransactionNumber').get();
-
-    int lastTransactionNumber = lastTransactionDoc.exists
-        ? lastTransactionDoc.get('number')
-        : 0; // If no document exists, start with 0
-
-    int nextTransactionNumber = lastTransactionNumber + 1;
-    String transactionId = 'Transaction$nextTransactionNumber';
-
-    Map<String, dynamic> orderData = {
-      'date': Timestamp.fromDate(DateTime.now()), // Adjust for GMT+8
-      'totalPrice': _calculateTotal(),
-    };
-
-    // Update the last used transaction number in the database
-    await db.collection('Meta').doc('TransactionNumber').set({
-      'number': nextTransactionNumber,
+  int _calculateTotal() {
+    int total = 0;
+    cart.forEach((key, quantity) {
+      final item = items.firstWhere((item) => item.name == key);
+      total += item.price * quantity;
     });
-
-    await db
-        .collection('Transactions')
-        .doc(transactionId)
-        .set(orderData)
-        .then((_) => print('Order successfully submitted!'))
-        .catchError((error) => print('Failed to submit order: $error'));
+    return total;
   }
 
   Widget _buildSearchBar() {
@@ -211,29 +131,21 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _menuList(BuildContext context, Map<String, dynamic> item, int index) {
+  Widget _menuList(BuildContext context, MenuItem item, Function(MenuItem) addToCart, Function(MenuItem) removeFromCart) {
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.all(8),
       shape: RoundedRectangleBorder(
-        side: BorderSide(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
         borderRadius: BorderRadius.circular(10),
       ),
       child: InkWell(
-        onTap: () {
-          if (!item['inCart']) {
-            _addToCart(index);
-          }
-        },
+        onTap: () => addToCart(item),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Expanded(
               child: Image.network(
-                "https://via.placeholder.com/110x78", // Replace with item image URL
+                item.imageUrl, // Using the image URL from the item
                 fit: BoxFit.cover,
               ),
             ),
@@ -243,7 +155,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    item['name'],
+                    item.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -256,14 +168,14 @@ class _OrderScreenState extends State<OrderScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Stock: ${item['stock']}',
+                        'Stock: ${item.stock}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
                         ),
                       ),
                       Text(
-                        '₱${item['price']}',
+                        '₱${item.price}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -275,10 +187,9 @@ class _OrderScreenState extends State<OrderScreen> {
                 ],
               ),
             ),
-            if (item['inCart'])
+            if (cart.containsKey(item.name) && cart[item.name]! > 0)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.blue[50],
                   borderRadius: BorderRadius.only(
@@ -290,21 +201,19 @@ class _OrderScreenState extends State<OrderScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => _decrementQuantity(index),
-                      icon: Icon(Icons.remove_circle_outline,
-                          color: Colors.blue[800]),
+                      onPressed: () => removeFromCart(item),
+                      icon: Icon(Icons.remove_circle_outline, color: Colors.blue[800]),
                     ),
                     Text(
-                      ' ${item['quantity']}',
+                      ' ${cart[item.name]}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
                     IconButton(
-                      onPressed: () => _incrementQuantity(index),
-                      icon: Icon(Icons.add_circle_outline,
-                          color: Colors.blue[800]),
+                      onPressed: () => addToCart(item),
+                      icon: Icon(Icons.add_circle_outline, color: Colors.blue[800]),
                     ),
                   ],
                 ),
@@ -315,51 +224,8 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Calculate the bottom padding for the GridView,
-    // taking into account the height of the bottomSheet if it exists.
-    double bottomPadding = 0;
-    Widget? totalDisplay = _buildTotalDisplay(context);
-    if (totalDisplay != null) {
-      // You can adjust this value if the bottom sheet is larger or smaller
-      bottomPadding = 60.0;
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order'),
-      ),
-      body: Column(
-        children: [
-          _buildSearchBar(),
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                        4.0, 4.0, 4.0, bottomPadding), // Adjusted padding
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: displayedItems.length,
-                    itemBuilder: (context, index) {
-                      return _menuList(context, displayedItems[index], index);
-                    },
-                  ),
-                ),
-        ],
-      ),
-      bottomNavigationBar: Navigation(),
-      bottomSheet: totalDisplay, // Use the variable here
-    );
-  }
-
   Widget? _buildTotalDisplay(BuildContext context) {
-    int totalItems = cart.values
-        .fold(0, (previousValue, quantity) => previousValue + quantity);
+    int totalItems = cart.values.fold(0, (previousValue, quantity) => previousValue + quantity);
     String itemsText = totalItems == 1 ? 'Item' : 'Items';
 
     if (totalItems > 0) {
@@ -395,20 +261,18 @@ class _OrderScreenState extends State<OrderScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CartScreen(cart: cart, items: items),
-                    ),
-                  );
+  context,
+  MaterialPageRoute(
+    builder: (context) => CartScreen(cart: cart, items: convertItemsToMap(items)),
+  ),
+);
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.blue[800],
                   backgroundColor: Colors.white, // Button color
                   elevation: 0, // Removes shadow for a flat design
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(8), // Adjust the radius as needed
+                    borderRadius: BorderRadius.circular(8), // Adjust the radius as needed
                   ),
                 ),
                 child: Padding(
@@ -436,5 +300,35 @@ class _OrderScreenState extends State<OrderScreen> {
     }
   }
 
-  // Add this part for the total price
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Order'),
+      ),
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Expanded(
+                  child: GridView.builder(
+                    padding: EdgeInsets.fromLTRB(4.0, 4.0, 4.0, 0.0),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: displayedItems.length,
+                    itemBuilder: (context, index) {
+                      MenuItem item = displayedItems[index];
+                      return _menuList(context, item, _addToCart, _removeFromCart);
+                    },
+                  ),
+                ),
+        ],
+      ),
+      bottomNavigationBar: Navigation(),
+      bottomSheet: _buildTotalDisplay(context),
+    );
+  }
 }
