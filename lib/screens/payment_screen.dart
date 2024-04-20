@@ -19,11 +19,11 @@ class PaymentScreenPage extends StatefulWidget {
 class _PaymentScreenPageState extends State<PaymentScreenPage> {
   bool _isLoading = false;
   String? _rfidUid;
-  String transactionId = ''; 
+  String transactionId = '';
 
   void _startRfidListener() {
     final rfidRef = FirebaseDatabase.instance
-        .ref('RFID/Current-UID');
+        .ref('RFID/UID');
 
     rfidRef.onValue.listen((event) {
       print('Waiting for RFID card...');  
@@ -57,6 +57,36 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       int nextTransactionNumber = lastTransactionNumber + 1;
       transactionId = 'Transaction$nextTransactionNumber'; 
 
+      // Check if student exists and retrieve balance
+      QuerySnapshot studentSnapshot = await db
+          .collection('Student-Users')
+          .where('UID', isEqualTo: _rfidUid) 
+          .get();
+
+      if (studentSnapshot.docs.isEmpty) {
+        // Handle student not found case 
+        print('Student with UID $_rfidUid not found in Firestore database');
+        return; 
+      }
+
+      // Get student details
+      String studentName = studentSnapshot.docs.first.get('Name');
+      int studentBalance = studentSnapshot.docs.first.get('Balance'); 
+      print('Student found: $studentName');
+
+      // Check if the balance is sufficient
+      if (studentBalance < widget.totalPrice) {
+        print('Insufficient balance');
+        // Handle the insufficient balance case (e.g., show error message)
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Insufficient balance'),
+        ));
+        return; 
+      }
+
       Map<String, dynamic> orderData = {
         'date': Timestamp.fromDate(DateTime.now()),
         'totalPrice': total,
@@ -84,7 +114,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       // *******************************************************************
 
       // 2. Update Firebase Realtime Database to clear "Current-UID"
-      await FirebaseDatabase.instance.ref('RFID/Current-UID').set(null);
+      await FirebaseDatabase.instance.ref('RFID/UID').set(null);
 
       // 3. Navigate to Payment Successful screen and clear cart
       Navigator.pushReplacement( 
@@ -140,5 +170,4 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     );
   }
 }
-
 
