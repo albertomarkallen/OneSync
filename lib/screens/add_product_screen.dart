@@ -36,9 +36,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Future<void> _addProduct(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Sign in the user anonymously
-        // await signInUserAnon();
-        // Get the current user's ID
         String userID = FirebaseAuth.instance.currentUser!.uid;
         String productName = _nameController.text;
         String docID = productName.toString();

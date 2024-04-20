@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -37,15 +38,37 @@ class _MenuScreenState extends State<MenuScreen> {
 
   Future<void> _fetchMenuItems() async {
     try {
-      var snapshot = await FirebaseFirestore.instance.collection('Menu').get();
-      var menuItems =
-          snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
-      setState(() {
-        _menuItems = menuItems;
-        _displayedMenuItems = menuItems;
-      });
+      String userID = FirebaseAuth.instance.currentUser!.uid;
+      var snapshot = await FirebaseFirestore.instance
+          .collection('Menu')
+          .doc(userID)
+          .collection('vendorProducts')
+          .get();
+
+      print('Number of documents fetched: ${snapshot.docs.length}');
+      // Check if the snapshot has data
+      if (snapshot.docs.isNotEmpty) {
+        var menuItems =
+            snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
+        setState(() {
+          _menuItems = menuItems;
+          _displayedMenuItems = menuItems;
+        });
+      } else {
+        // Handle case when no menu items are found
+        setState(() {
+          _menuItems = [];
+          _displayedMenuItems = [];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No menu items found')),
+        );
+      }
     } catch (e) {
-      // Handle the error, perhaps show an alert or a Snackbar
+      // Handle errors by showing a Snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching menu items')),
+      );
     }
   }
 
