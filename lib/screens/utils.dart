@@ -5,13 +5,48 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-Future<void> signInUserAnon() async {
+Future<User?> signInWithEmailPassword(String email, String password) async {
   try {
     final UserCredential userCredential =
-        await FirebaseAuth.instance.signInAnonymously();
-    print('User signed in: ${userCredential.user!.uid}');
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return userCredential.user;
   } catch (e) {
     print('Error signing in: $e');
+    return null;
+  }
+}
+
+Future<User?> createAccountWithEmailPassword(
+    String email, String password) async {
+  try {
+    final UserCredential userCredential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return userCredential.user;
+  } catch (e) {
+    print('Error creating account: $e');
+    return null;
+  }
+}
+
+// Future<void> signInUserAnon() async {
+//   try {
+//     await FirebaseAuth.instance.signInAnonymously();
+//   } catch (e) {
+//     print('Error signing in anonymously: $e');
+//   }
+// }
+
+Future<void> signOutUser() async {
+  try {
+    await FirebaseAuth.instance.signOut();
+  } catch (e) {
+    print('Error signing out: $e');
   }
 }
 
@@ -25,8 +60,8 @@ Future<File?> getImageFromGallery(BuildContext context) async {
     }
   } catch (e) {
     print('Error getting image: $e');
-    return null;
   }
+  return null;
 }
 
 Future<bool> uploadFileForUser(File file) async {
@@ -38,9 +73,24 @@ Future<bool> uploadFileForUser(File file) async {
     final uploadRef =
         storageRef.child('$userId/uploads/products/$timestamp-$fileName');
     await uploadRef.putFile(file);
-    return true;
+    return await uploadRef.getDownloadURL().then((value) {
+      print('File uploaded to: $value');
+      return true;
+    });
   } catch (e) {
     print('Error uploading file: $e');
     return false;
+  }
+}
+
+Future<List<Reference>?> getUserUploadedFiles() async {
+  try {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final storageRef = FirebaseStorage.instance.ref();
+    final list = await storageRef.child('$userId/uploads/products').list();
+    return list.items;
+  } catch (e) {
+    print('Error getting user uploaded files: $e');
+    return null;
   }
 }
