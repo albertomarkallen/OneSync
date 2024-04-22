@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:onesync/screens/payment_successful_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:onesync/screens/profile_screen.dart';
+import 'dart:math'; // Import to generate random codes
 
 class PaymentScreenPage extends StatefulWidget {
   final num totalPrice;
@@ -22,6 +23,15 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   bool _isLoading = false;
   String? _rfidUid;
   String transactionId = '';
+
+  // Generate a random 8-digit alphanumeric code
+  String _generateRandomTransactionId() {
+    const String chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    Random rnd = Random.secure();
+    return String.fromCharCodes(Iterable.generate(
+        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  }
 
   void _startRfidListener() {
     final rfidRef = FirebaseDatabase.instance.ref('RFID/UID');
@@ -44,22 +54,15 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     });
 
     try {
+      // Generate the random transaction ID
+      transactionId = _generateRandomTransactionId();
+
       FirebaseFirestore db = FirebaseFirestore.instance;
       int total = widget.totalPrice.toInt();
 
-      DocumentSnapshot lastTransactionDoc =
-          await db.collection('Meta').doc('TransactionNumber').get();
-      int lastTransactionNumber =
-          lastTransactionDoc.exists ? lastTransactionDoc.get('number') : 0;
-      int nextTransactionNumber = lastTransactionNumber + 1;
-      transactionId = 'Transaction$nextTransactionNumber';
-
       // Fetch Vendor Data with Error Handling
       String currentUserId = await getCurrentUserId();
-      final vendorDoc = await db
-          .collection('Menu')
-          .doc(currentUserId)
-          .get();
+      final vendorDoc = await db.collection('Menu').doc(currentUserId).get();
 
       if (!vendorDoc.exists) {
         throw Exception('Vendor not found');
@@ -94,7 +97,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       }
 
       int updatedBalance = studentBalance - total;
-    
+
       // Find the vendor's document based on the RFID
       QuerySnapshot vendorRFIDSnapshot = await FirebaseFirestore.instance
           .collection('Menu') // Replace 'rfids' with your collection name
@@ -103,22 +106,20 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
 
       if (vendorRFIDSnapshot.docs.isEmpty) {
         print('Vendor RFID record not found');
-        // Handle case where the vendor RFID isn't found 
+        // Handle case where the vendor RFID isn't found
         return;
       }
 
       vendorRFIDSnapshot.docs.first.get('UID');
       DocumentSnapshot linkedVendorSnapshot =
-          await db.collection('Menu')
-          .doc(currentUserId)
-          .get();
+          await db.collection('Menu').doc(currentUserId).get();
       int vendorBalance =
           linkedVendorSnapshot.exists ? linkedVendorSnapshot.get('Balance') : 0;
       int updatedVendorBalance = vendorBalance + total;
 
       return db.runTransaction((transaction) async {
-        transaction.update(studentSnapshot.docs.first.reference,
-            {'Balance': updatedBalance});
+        transaction.update(
+            studentSnapshot.docs.first.reference, {'Balance': updatedBalance});
         transaction.update(db.collection('Menu').doc(currentUserId),
             {'Balance': updatedVendorBalance});
 
@@ -133,8 +134,6 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
 
         transaction.set(
             db.collection('Transactions').doc(transactionId), orderData);
-        transaction.update(db.collection('Meta').doc('TransactionNumber'),
-            {'number': nextTransactionNumber});
 
         // Update the vendor's RFID balance
         await _updateVendorRFIDBalance(_rfidUid!, total);
@@ -142,12 +141,12 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
         return null;
       }).then((_) {
         print('Order successfully submitted and balances updated!');
-        _clearDatabase();
+        // _clearDatabase();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => PaymentSuccessfulScreen(
-                totalPrice: widget.totalPrice),
+            builder: (context) =>
+                PaymentSuccessfulScreen(totalPrice: widget.totalPrice),
           ),
         );
       }).catchError((error) {
@@ -156,8 +155,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content:
-              Text('An error occurred during payment. Please try again.'),
+          content: Text('An error occurred during payment. Please try again.'),
         ));
       });
     } catch (e) {
@@ -196,15 +194,15 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     }
   }
 
-  Future<void> _clearDatabase() async {
-    try {
-      final dbRef = FirebaseDatabase.instance.ref('/');
-      await dbRef.remove();
-      print('Database cleared successfully');
-    } catch (error) {
-      print('Error clearing database: $error');
-    }
-  }
+  // Future<void> _clearDatabase() async {
+  //   try {
+  //     final dbRef = FirebaseDatabase.instance.ref('/');
+  //     await dbRef.remove();
+  //     print('Database cleared successfully');
+  //   } catch (error) {
+  //     print('Error clearing database: $error');
+  //   }
+  // }
 
   @override
   void initState() {
@@ -225,7 +223,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
             Text(
               _rfidUid == null
                   ? 'Please tap your RFID card'
-                  : 'Order submitted for RFID: $_rfidUid',
+                  : 'Order submitted',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
