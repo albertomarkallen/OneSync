@@ -10,14 +10,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ... (existing code for fetching product data)
-
-  // Additional variables for dashboard metrics (仮想的ダッシュボード指標 - Kashitsu no dashubōdo shihyō)
+  // Variables for dashboard metrics
   int totalInventory = 0;
   double totalSales = 0.0;
   String bestSellingProduct = '';
 
-  // ... (existing code to fetch product data)
+  // Function for navigation
+  void _navigateToSalesDataTable() {
+    Navigator.of(context).pushNamed('/SalesDataTable');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,39 +27,80 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('OneSync'),
       ),
       body: SingleChildScrollView(
-        // Make content scrollable
         child: Column(
           children: [
             // Dashboard Section
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Wrap(
-                // Wrap widgets for responsive layout
-                spacing: 16.0, // Spacing between dashboard cards
-                runSpacing: 16.0, // Spacing between rows of cards
+                spacing: 16.0,
+                runSpacing: 16.0,
                 children: [
                   DashboardCard(
                     title: 'Inventory Tracker',
-                    value: totalInventory
-                        .toString(), // Assuming you have logic to calculate total inventory
+                    value: totalInventory.toString(),
                   ),
                   DashboardCard(
                     title: 'Sales Forecast',
-                    value: totalSales.toStringAsFixed(
-                        2), // Assuming you have logic to calculate total sales
+                    value: totalSales.toStringAsFixed(2),
                   ),
                   DashboardCard(
                     title: 'Best Selling',
-                    value:
-                        bestSellingProduct, // Assuming you have logic to identify best-selling product
+                    value: bestSellingProduct,
                   ),
-                  // Add more dashboard cards as needed
                 ],
               ),
             ),
 
-            // Product Listing Section (if applicable)
-            // ... (Your existing code to display product list/categories)
+            // Button to View Sales Data Table
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _navigateToSalesDataTable,
+                child: const Text('View Sales Data Table'),
+              ),
+            ),
+
+            // Example Product Listing Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Product Listing',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  // Replace this with logic to fetch products from your data source (e.g., Firestore)
+                  FutureBuilder<QuerySnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('products')
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else {
+                          return ListView.builder(
+                              shrinkWrap:
+                                  true, // Important for use inside a column
+                              physics:
+                                  const NeverScrollableScrollPhysics(), // Prevent scrolling of the list
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                DocumentSnapshot productDoc =
+                                    snapshot.data!.docs[index];
+                                return ListTile(
+                                  title: Text(productDoc['name']),
+                                  subtitle: Text('Price: \$' +
+                                      productDoc['price'].toString()),
+                                );
+                              });
+                        }
+                      }),
+                ],
+              ),
+            ),
           ],
         ),
       ),

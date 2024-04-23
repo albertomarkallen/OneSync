@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/cart_screen.dart';
-import 'package:onesync/models/models.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -15,18 +17,20 @@ class OrderScreen extends StatefulWidget {
 class _OrderScreenState extends State<OrderScreen> {
   List<MenuItem> items = [];
   List<Map<String, dynamic>> convertItemsToMap(List<MenuItem> items) {
-  return items.map((item) => {
-    'name': item.name,
-    'price': item.price,
-    'stock': item.stock,
-    'imageUrl': item.imageUrl,
-    'category': item.category
-  }).toList();
-}
+    return items
+        .map((item) => {
+              'name': item.name,
+              'price': item.price,
+              'stock': item.stock,
+              'imageUrl': item.imageUrl,
+              'category': item.category
+            })
+        .toList();
+  }
+
   Map<String, int> cart = {};
   bool isLoading = true;
   final TextEditingController _searchController = TextEditingController();
-  List<MenuItem> displayedItems = [];
 
   @override
   void initState() {
@@ -50,11 +54,11 @@ class _OrderScreenState extends State<OrderScreen> {
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        var fetchedItems = snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
+        var fetchedItems =
+            snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
 
         setState(() {
           items = fetchedItems;
-          displayedItems = List.from(fetchedItems);
           isLoading = false;
         });
       } else {
@@ -78,8 +82,9 @@ class _OrderScreenState extends State<OrderScreen> {
   void _filterItems(String query) {
     String lowerCaseQuery = query.toLowerCase();
     setState(() {
-      displayedItems = items.where((item) {
-        return item.name.toLowerCase().contains(lowerCaseQuery);
+      items = items.where((item) {
+        return item.name.toLowerCase().contains(lowerCaseQuery) ||
+            item.category.toLowerCase().contains(lowerCaseQuery);
       }).toList();
     });
   }
@@ -116,116 +121,176 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _filterItems,
-        decoration: InputDecoration(
-          labelText: 'Search',
-          suffixIcon: Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SizedBox(
+        height: 40.0,
+        child: TextField(
+          controller: _searchController,
+          onChanged: _filterItems,
+          decoration: InputDecoration(
+            labelText: 'Search',
+            suffixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.0),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _menuList(BuildContext context, MenuItem item, Function(MenuItem) addToCart, Function(MenuItem) removeFromCart) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: InkWell(
-        onTap: () => addToCart(item),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Expanded(
-              child: Image.network(
-                item.imageUrl, // Using the image URL from the item
-                fit: BoxFit.cover,
-              ),
+  Widget _menuList(BuildContext context, MenuItem item,
+      Function(MenuItem) addToCart, Function(MenuItem) removeFromCart) {
+    int cartQuantity = cart[item.name] ?? 0; // Get the current quantity in cart
+
+    return InkWell(
+      onTap: () {}, // Add an empty onTap for the entire card
+      child: Container(
+        width: 110,
+        height: 115,
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(
+              width: 0.26,
+              color: Color(0x514D4D4D),
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Stock: ${item.stock}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Text(
-                        '₱${item.price}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.blue[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            if (cart.containsKey(item.name) && cart[item.name]! > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
+                  shape: BoxShape.circle,
+                  color: Colors.lightGreen, // Light green circle color
                 ),
-                child: Row(
+                child: IconButton(
+                  icon: cartQuantity > 0
+                      ? Text(cartQuantity.toString(),
+                          style: TextStyle(color: Colors.white))
+                      : Icon(Icons.add, color: Colors.white),
+                  onPressed: () {
+                    if (cartQuantity > 0) {
+                      addToCart(item);
+                    } else {
+                      addToCart(item);
+                      setState(() {
+                        cart[item.name] = 1;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
+                      icon: Icon(Icons.remove),
                       onPressed: () => removeFromCart(item),
-                      icon: Icon(Icons.remove_circle_outline, color: Colors.blue[800]),
-                    ),
-                    Text(
-                      ' ${cart[item.name]}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => addToCart(item),
-                      icon: Icon(Icons.add_circle_outline, color: Colors.blue[800]),
+                      color: Colors.red, // Set color to red
                     ),
                   ],
                 ),
-              ),
+                Container(
+                  width: 110,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(item.imageUrl),
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2.61),
+                        child: Text(
+                          item.name,
+                          style: const TextStyle(
+                            color: Color(0xFF212121),
+                            fontSize: 10,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 8), // Aligns with the name above
+                            child: Text(
+                              '${item.stock} left',
+                              style: const TextStyle(
+                                color: Color(0xFF717171),
+                                fontSize: 9,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Text(
+                              '₱ ${item.price.toStringAsFixed(2)}', // Format price to two decimal places
+                              style: const TextStyle(
+                                color: Color(
+                                    0xFF0663C7), // Consider defining this color in your theme settings
+                                fontSize: 10,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildMenuGrid() {
+    return Expanded(
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16.0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // Change cross axis count as needed
+          crossAxisSpacing: 6.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.88,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          return _menuList(context, items[index], _addToCart, _removeFromCart);
+        },
+      ),
+    );
+  }
+
   Widget? _buildTotalDisplay(BuildContext context) {
-    int totalItems = cart.values.fold(0, (previousValue, quantity) => previousValue + quantity);
+    int totalItems = cart.values
+        .fold(0, (previousValue, quantity) => previousValue + quantity);
     String itemsText = totalItems == 1 ? 'Item' : 'Items';
 
     if (totalItems > 0) {
@@ -261,18 +326,20 @@ class _OrderScreenState extends State<OrderScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => CartScreen(cart: cart, items: convertItemsToMap(items)),
-  ),
-);
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CartScreen(
+                          cart: cart, items: convertItemsToMap(items)),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.blue[800],
                   backgroundColor: Colors.white, // Button color
                   elevation: 0, // Removes shadow for a flat design
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Adjust the radius as needed
+                    borderRadius:
+                        BorderRadius.circular(5), // Adjust the radius as needed
                   ),
                 ),
                 child: Padding(
@@ -304,30 +371,23 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order'),
+        title: const Text('Order',
+            style: TextStyle(
+                color: Color(0xFF212121),
+                fontSize: 28,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w700,
+                height: 0.05)),
       ),
       body: Column(
         children: [
           _buildSearchBar(),
           isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.fromLTRB(4.0, 4.0, 4.0, 0.0),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: displayedItems.length,
-                    itemBuilder: (context, index) {
-                      MenuItem item = displayedItems[index];
-                      return _menuList(context, item, _addToCart, _removeFromCart);
-                    },
-                  ),
-                ),
+              : _buildMenuGrid(),
         ],
       ),
-      bottomNavigationBar: Navigation(),
+      bottomNavigationBar: const Navigation(),
       bottomSheet: _buildTotalDisplay(context),
     );
   }

@@ -42,7 +42,7 @@ android {
 
     defaultConfig {
         applicationId "com.thesis3.onesync"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 26
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

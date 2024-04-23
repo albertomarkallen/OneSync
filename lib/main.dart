@@ -4,6 +4,7 @@ import 'package:onesync/authenticationWrapper.dart';
 import 'package:onesync/firebase_options.dart';
 import 'package:onesync/screens/add_product_screen.dart';
 import 'package:onesync/screens/login.dart';
+import 'package:onesync/screens/sales_data_table.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/addProduct': (context) => AddProductScreen(),
         '/Login': (context) => LoginScreen(),
+        '/SalesDataTable': (context) => SalesDataTable(),
       },
       theme: ThemeData(
           // Add your theme customizations here
