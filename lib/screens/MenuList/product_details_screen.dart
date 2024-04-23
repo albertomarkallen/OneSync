@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/models.dart';
+import '../../models/models.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final MenuItem product;
@@ -19,7 +19,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         title: Text(widget.product.name),
         actions: [
           IconButton(
-            icon: Icon(Icons.delete),
+            icon: const Icon(Icons.delete),
             onPressed: () => _showDeleteConfirmationDialog(context),
           ),
         ],
@@ -39,14 +39,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   child: Icon(Icons.image),
                 ),
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
 
               // Product Name
               Text(
                 widget.product.name,
                 style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 8.0),
+              const SizedBox(height: 8.0),
 
               // Price
               Text(
@@ -63,13 +63,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               SizedBox(height: 16.0),
 
               // Description
-              Text(
+              const Text(
                 'Description:',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
               ),
-              SizedBox(height: 4.0),
-              Text(
-                //widget.product.description ??
+              const SizedBox(height: 4.0),
+              const Text(
                 'Add a description of the product here.',
                 style: TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
               ),

@@ -1,5 +1,5 @@
-import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 class SalesPredictor {
   late Interpreter _interpreter;

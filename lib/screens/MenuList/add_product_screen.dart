@@ -8,7 +8,7 @@ import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/utils.dart';
 
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({Key? key}) : super(key: key);
+  const AddProductScreen({super.key});
 
   @override
   _AddProductScreenState createState() => _AddProductScreenState();
@@ -82,6 +82,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   // Add Product Screen
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Product')),

@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:onesync/screens/SignUpScreen.dart';
+import 'package:onesync/screens/(Auth)/SignUpScreen.dart';
 import 'package:onesync/screens/utils.dart';
 
 class LoginScreen extends StatelessWidget {

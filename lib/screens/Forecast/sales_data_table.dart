@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
-import 'sales_predictor.dart';
-import 'sales_dart.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+
+import 'sales_dart.dart';
+import 'sales_predictor.dart';
 
 class SalesDataTable extends StatefulWidget {
   const SalesDataTable({super.key});

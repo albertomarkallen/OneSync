@@ -34,14 +34,6 @@ Future<User?> createAccountWithEmailPassword(
   }
 }
 
-// Future<void> signInUserAnon() async {
-//   try {
-//     await FirebaseAuth.instance.signInAnonymously();
-//   } catch (e) {
-//     print('Error signing in anonymously: $e');
-//   }
-// }
-
 Future<void> signOutUser() async {
   try {
     await FirebaseAuth.instance.signOut();
@@ -52,9 +44,9 @@ Future<void> signOutUser() async {
 
 Future<File?> getImageFromGallery(BuildContext context) async {
   try {
-    final ImagePicker _picker = ImagePicker();
+    final ImagePicker picker = ImagePicker();
     // Pick an image
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       return File(image.path); // Convert XFile to File
     }

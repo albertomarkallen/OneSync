@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
-import 'package:onesync/screens/product_details_screen.dart';
+import 'package:onesync/screens/MenuList/product_details_screen.dart';
 
 class MenuScreen extends StatefulWidget {
-  const MenuScreen({Key? key}) : super(key: key);
+  const MenuScreen({super.key});
 
   @override
   _MenuScreenState createState() => _MenuScreenState();
@@ -104,7 +104,7 @@ class _MenuScreenState extends State<MenuScreen> {
         height: 25,
         child: Ink(
           decoration: ShapeDecoration(
-            color: Color(0xFF4196F0),
+            color: const Color(0xFF4196F0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6.24),
             ),
@@ -164,7 +164,9 @@ class _MenuScreenState extends State<MenuScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
         ),
-        side: _selectedLabel == label ? null : BorderSide(color: Colors.blue),
+        side: _selectedLabel == label
+            ? null
+            : const BorderSide(color: Colors.blue),
       ),
       child: Text(
         label,

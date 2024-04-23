@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:onesync/screens/home_screen.dart';
-import 'package:onesync/screens/login.dart';
+import 'package:onesync/screens/(Auth)/login.dart';
+import 'package:onesync/screens/Home/home_screen.dart';
 
 class AuthenticationWrapper extends StatefulWidget {
   @override

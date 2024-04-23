@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart';  // Import your 'navigation.dart' file
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:onesync/screens/payment_screen.dart'; 
+import 'package:flutter/material.dart';
+import 'package:onesync/navigation.dart'; // Import your 'navigation.dart' file
+import 'package:onesync/screens/Order/payment_screen.dart';
 
 class CartScreen extends StatefulWidget {
   final Map<String, int> cart;
   final List<Map<String, dynamic>> items;
 
-  const CartScreen({Key? key, required this.cart, required this.items}) : super(key: key);
+  const CartScreen({super.key, required this.cart, required this.items});
 
   @override
   _CartScreenState createState() => _CartScreenState();
@@ -16,7 +16,8 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   num _calculateTotal() {
     return widget.cart.entries
-        .map((entry) => widget.items
+        .map((entry) =>
+            widget.items
                 .firstWhere((item) => item['name'] == entry.key)['price'] *
             entry.value)
         .fold(0, (previousValue, element) => previousValue + element);
@@ -39,20 +40,22 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCheckoutButton(BuildContext context) {
-    int totalItems = widget.cart.values.fold(0, (previousValue, quantity) => previousValue + quantity);
+    int totalItems = widget.cart.values
+        .fold(0, (previousValue, quantity) => previousValue + quantity);
     num totalPrice = _calculateTotal();
 
     return totalItems > 0
         ? Container(
             color: Colors.blue[700], // Use a deep blue color for the background
-            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: SafeArea(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Total: ₱$totalPrice',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -62,14 +65,14 @@ class _CartScreenState extends State<CartScreen> {
                     onPressed: () => _goToWaitForRfid(context),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.blue[800],
-                      backgroundColor: Colors.white, 
-                      elevation: 0, 
+                      backgroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8), 
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0),
                       child: Text(
                         'Pay Now',
                         style: TextStyle(color: Colors.blue[800]),
@@ -80,21 +83,21 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
           )
-        : SizedBox.shrink(); // Return an empty container if no items
+        : const SizedBox.shrink(); // Return an empty container if no items
   }
 
   // Navigate to a new page to wait for RFID
-void _goToWaitForRfid(BuildContext context) async {
-  num totalPrice = _calculateTotal(); 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => PaymentScreenPage(
+  void _goToWaitForRfid(BuildContext context) async {
+    num totalPrice = _calculateTotal();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentScreenPage(
           totalPrice: totalPrice,
           cart: widget.cart, // Pass the cart data
+        ),
       ),
-    ),
-  );
+    );
     // Proceed to order submission
   }
 
@@ -106,9 +109,8 @@ void _goToWaitForRfid(BuildContext context) async {
     DocumentSnapshot lastTransactionDoc =
         await db.collection('Meta').doc('TransactionNumber').get();
 
-    int lastTransactionNumber = lastTransactionDoc.exists
-        ? lastTransactionDoc.get('number')
-        : 0;
+    int lastTransactionNumber =
+        lastTransactionDoc.exists ? lastTransactionDoc.get('number') : 0;
     int nextTransactionNumber = lastTransactionNumber + 1;
     String transactionId = 'Transaction$nextTransactionNumber';
 
@@ -131,7 +133,7 @@ void _goToWaitForRfid(BuildContext context) async {
         .set(orderData)
         .then((_) {
       print('Order successfully submitted!');
-      Navigator.pop(context); 
+      Navigator.pop(context);
     }).catchError((error) {
       // ... Error handling ...
     });
@@ -141,7 +143,7 @@ void _goToWaitForRfid(BuildContext context) async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cart'),
+        title: const Text('Cart'),
       ),
       body: Column(
         children: [
@@ -159,7 +161,7 @@ void _goToWaitForRfid(BuildContext context) async {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(itemName),
-                      SizedBox(height: 4), 
+                      const SizedBox(height: 4),
                       Text('Subtotal: ₱${subtotal.toStringAsFixed(2)}'),
                     ],
                   ),
@@ -168,14 +170,14 @@ void _goToWaitForRfid(BuildContext context) async {
                     children: [
                       IconButton(
                         onPressed: () => _decrementQuantity(itemName),
-                        icon: Icon(Icons.remove),
+                        icon: const Icon(Icons.remove),
                       ),
-                      SizedBox(width: 8), 
-                      Text(itemQuantity.toString()), 
-                      SizedBox(width: 8), 
+                      const SizedBox(width: 8),
+                      Text(itemQuantity.toString()),
+                      const SizedBox(width: 8),
                       IconButton(
                         onPressed: () => _incrementQuantity(itemName),
-                        icon: Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                       ),
                     ],
                   ),
@@ -186,7 +188,7 @@ void _goToWaitForRfid(BuildContext context) async {
           _buildCheckoutButton(context),
         ],
       ),
-      bottomNavigationBar: Navigation(), 
+      bottomNavigationBar: const Navigation(),
     );
   }
 }

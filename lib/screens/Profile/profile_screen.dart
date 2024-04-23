@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -24,11 +24,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _fetchVendorData() async {
     setState(() {
-      _isLoading = true; 
+      _isLoading = true;
     });
 
     try {
-      String currentUserId = await getCurrentUserId(); 
+      String currentUserId = await getCurrentUserId();
 
       final vendorDoc = await FirebaseFirestore.instance
           .collection('Menu')
@@ -55,11 +55,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut();  // Firebase sign-out
+      await FirebaseAuth.instance.signOut(); // Firebase sign-out
       Navigator.of(context).pushNamedAndRemoveUntil(
-          '/Login', 
-          (route) => false, // Navigate to login, remove other routes
-      ); 
+        '/Login',
+        (route) => false, // Navigate to login, remove other routes
+      );
     } catch (e) {
       print('Error signing out: $e');
       // Show error message or handle error as needed
@@ -70,23 +70,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: const Text('Profile'),
       ),
       body: Center(
         child: _isLoading
-            ? CircularProgressIndicator() 
+            ? const CircularProgressIndicator()
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Vendor Name: $vendorName'),
                   Text('UID: $uid'),
                   Text('Balance: $balance'),
-                  SizedBox(height: 20), 
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       _signOut(context);
                     },
-                    child: Text('Sign Out'),
+                    child: const Text('Sign Out'),
                   ),
                 ],
               ),
@@ -100,10 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user != null) {
       return user.uid;
     } else {
-      throw Exception('User not logged in'); 
+      throw Exception('User not logged in');
     }
   }
 }
-
-
-

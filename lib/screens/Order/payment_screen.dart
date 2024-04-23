@@ -1,19 +1,18 @@
+import 'dart:math'; // Import to generate random codes
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:onesync/screens/payment_successful_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:onesync/screens/profile_screen.dart';
-import 'dart:math'; // Import to generate random codes
+import 'package:onesync/screens/Order/payment_successful_screen.dart';
 
 class PaymentScreenPage extends StatefulWidget {
   final num totalPrice;
   final Map<String, int> cart;
 
   const PaymentScreenPage(
-      {Key? key, required this.totalPrice, required this.cart})
-      : super(key: key);
+      {super.key, required this.totalPrice, required this.cart});
 
   @override
   _PaymentScreenPageState createState() => _PaymentScreenPageState();
@@ -106,7 +105,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
 
       if (vendorRFIDSnapshot.docs.isEmpty) {
         print('Vendor RFID record not found');
-        // Handle case where the vendor RFID isn't found
+
         return;
       }
 
@@ -214,7 +213,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Payment in Progress'),
+        title: const Text('Payment in Progress'),
       ),
       body: Center(
         child: Column(
@@ -224,19 +223,19 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
               _rfidUid == null
                   ? 'Please tap your RFID card'
                   : 'Order submitted',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Total: ₱${widget.totalPrice}',
-              style: TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 18),
             ),
-            SizedBox(height: 40),
-            if (_isLoading) CircularProgressIndicator(),
+            const SizedBox(height: 40),
+            if (_isLoading) const CircularProgressIndicator(),
           ],
         ),
       ),
-      bottomNavigationBar: Navigation(),
+      bottomNavigationBar: const Navigation(),
     );
   }
 
