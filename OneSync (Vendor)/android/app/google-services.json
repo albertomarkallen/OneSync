@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1055546308486",
+    "project_id": "onesync-b234d",
+    "storage_bucket": "onesync-b234d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055546308486:android:19qf1b31430a7bec8425e07",
+        "android_client_info": {
+          "package_name": "com.thesis3.onesync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjzzVsewvrDwvYG9urLB8l2F7cpRqbn5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
