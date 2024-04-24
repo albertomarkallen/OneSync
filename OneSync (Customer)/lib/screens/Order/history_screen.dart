@@ -1,16 +1,25 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:onesync/navigation.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:onesync/navigation.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({Key? key}) : super(key: key);
+  final int selectedIndex;
+  const HistoryScreen({super.key, required this.selectedIndex});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  int _selectedIndex = 0; // Assuming 'Dashboard' is the second item
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   Map<String, dynamic>? _selectedOrder;
 
   @override
@@ -64,7 +73,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        '${DateFormat('yyyy-MM-dd').format(orderDate)}',
+                                        DateFormat('yyyy-MM-dd')
+                                            .format(orderDate),
                                         style: const TextStyle(fontSize: 12.0),
                                       ),
                                     ],
@@ -82,7 +92,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        '${DateFormat('hh:mm a').format(orderDate)}',
+                                        DateFormat('hh:mm a').format(orderDate),
                                         style: const TextStyle(fontSize: 12.0),
                                       )
                                     ],
@@ -93,7 +103,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
         },
       ),
-      bottomNavigationBar: Navigation(),
+      bottomNavigationBar: Navigation(
+        selectedIndex: widget.selectedIndex,
+      ),
     );
   }
 
@@ -145,7 +157,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     Text('Date: ', style: const TextStyle(color: Colors.black)),
                     Text(
-                      '${DateFormat.yMMMd().format(orderDate)}',
+                      DateFormat.yMMMd().format(orderDate),
                       style: const TextStyle(color: Colors.blue),
                     ),
                   ],
@@ -158,7 +170,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     Text('Time: ', style: const TextStyle(color: Colors.black)),
                     Text(
-                      '${DateFormat('hh:mm a').format(orderDate)}',
+                      DateFormat('hh:mm a').format(orderDate),
                       style: const TextStyle(color: Colors.blue),
                     ),
                   ],

@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Order/payment_successful_screen.dart';
 
 class PaymentScreenPage extends StatefulWidget {
@@ -19,6 +18,14 @@ class PaymentScreenPage extends StatefulWidget {
 }
 
 class _PaymentScreenPageState extends State<PaymentScreenPage> {
+  int _selectedIndex = 3; // Assuming 'Dashboard' is the second item
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   bool _isLoading = false;
   String? _rfidUid;
   String transactionId = '';
@@ -235,7 +242,6 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const Navigation(),
     );
   }
 

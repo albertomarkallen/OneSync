@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart'; // Import your 'navigation.dart' file
 import 'package:onesync/screens/Order/payment_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -14,6 +13,14 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  int _selectedIndex = 3;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   num _calculateTotal() {
     return widget.cart.entries
         .map((entry) =>
@@ -188,7 +195,6 @@ class _CartScreenState extends State<CartScreen> {
           _buildCheckoutButton(context),
         ],
       ),
-      bottomNavigationBar: const Navigation(),
     );
   }
 }

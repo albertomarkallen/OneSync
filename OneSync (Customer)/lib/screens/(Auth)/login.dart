@@ -1,10 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:onesync/screens/(Auth)/SignUpScreen.dart';
-import 'package:onesync/screens/utils.dart';
+import 'package:flutter_svg/svg.dart';
 
 class LoginScreen extends StatelessWidget {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _rfidController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
@@ -37,7 +36,7 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-              buildInputField('Email Address', _emailController),
+              buildInputField('RFID reference number', _rfidController),
               const SizedBox(height: 20),
               buildInputField('Password', _passwordController,
                   isPassword: true),
@@ -45,128 +44,18 @@ class LoginScreen extends StatelessWidget {
               forgotPassword(),
               const SizedBox(height: 30),
               buildLoginButton(context),
-              const SizedBox(height: 20),
-              signWithGoogle(context),
               const SizedBox(height: 30),
-              dontHaveAnAccount(context),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget signWithGoogle(BuildContext context) {
-    return SizedBox(
-      width: 344,
-      height: 86,
-      child: Column(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 18,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                'or',
-                style: TextStyle(
-                  color: Colors.black.withOpacity(0.5),
-                  fontSize: 12,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w400,
+              SizedBox(
+                width: double.infinity,
+                height: 262,
+                child: SvgPicture.asset(
+                  'assets/Ripple.svg',
+                  fit: BoxFit
+                      .cover, // or BoxFit.contain depending on your preference
                 ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              width: double.infinity,
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(width: 1, color: Color(0xFFD8DADC)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image:
-                            NetworkImage("https://via.placeholder.com/24x24"),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Sign In with Google',
-                      style: TextStyle(
-                        color: Colors.black.withOpacity(0.800000011920929),
-                        fontSize: 16,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget dontHaveAnAccount(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const SignUpScreen()),
-        );
-      },
-      child: Align(
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Don’t have an account? ',
-                    style: TextStyle(
-                      color: Colors.black.withOpacity(0.7),
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      height: 0.09,
-                    ),
-                  ),
-                  const TextSpan(
-                    text: 'Sign Up',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      height: 0.09,
-                    ),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );
@@ -235,22 +124,26 @@ class LoginScreen extends StatelessWidget {
       child: TextButton(
         // Add login functionality here
         onPressed: () async {
-          // Add login logic here
-          final String email = _emailController.text.trim();
+          final String rfid = _rfidController.text.trim();
           final String password = _passwordController.text.trim();
           // Check if email and password are not empty
-          if (email.isNotEmpty && password.isNotEmpty) {
-            User? user = await signInWithEmailPassword(email, password);
+          if (rfid.isNotEmpty && password.isNotEmpty) {
+            DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+                .collection('Student-Users')
+                .doc(rfid)
+                .get();
             // Check if user is not null
-            if (user != null) {
+            if (documentSnapshot.exists) {
+              Map<String, dynamic> userData =
+                  documentSnapshot.data() as Map<String, dynamic>;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Login successful!')),
               );
-              // Navigate to the next screen upon successful login
+
               Navigator.of(context).pushReplacementNamed('/');
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Failed to log in')),
+                const SnackBar(content: Text('RFID not found')),
               );
             }
           } else {

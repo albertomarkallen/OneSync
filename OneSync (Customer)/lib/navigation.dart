@@ -1,72 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/screens/Home/home_screen.dart';
-import 'package:onesync/screens/MenuList/menu_screen.dart';
+import 'package:onesync/screens/Dashboard/dashboard_screen.dart';
 import 'package:onesync/screens/Order/history_screen.dart';
-import 'package:onesync/screens/Order/order_screen.dart';
 import 'package:onesync/screens/Profile/profile_screen.dart';
 
 class Navigation extends StatefulWidget {
-  const Navigation({super.key});
+  final int selectedIndex;
+
+  const Navigation({super.key, required this.selectedIndex});
 
   @override
-  State<Navigation> createState() => _NavigationState();
+  // ignore: library_private_types_in_public_api
+  _NavigationState createState() => _NavigationState();
 }
 
 class _NavigationState extends State<Navigation> {
-  int _selectedIndex = 0;
+  late int _selectedIndex; // Changed to late initialization
+
+  final List<Widget> _screens = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex =
+        widget.selectedIndex; // Initialize _selectedIndex from widget
+
+    // Populate the list of screens
+    _screens.addAll([
+      HistoryScreen(
+        selectedIndex: 0,
+      ),
+      DashboardScreen(selectedIndex: 1), // Removed unnecessary selectedIndex
+      ProfileScreen(selectedIndex: 2), // Removed unnecessary selectedIndex
+    ]);
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-
-    // Navigate to the selected screen without replacing the current one
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) {
-        if (index == 0) {
-          return const HomeScreen();
-        } else if (index == 1) {
-          return const MenuScreen();
-        } else if (index == 2) {
-          return const OrderScreen();
-        } else if (index == 3) {
-          return const HistoryScreen();
-        } else if (index == 4) {
-          return const ProfileScreen();
-        }
-        return const HomeScreen(); // Default to HomeScreen if index is out of bounds
-      }),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu, color: Color(0xFF717171)),
-          label: 'Menu',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart, color: Color(0xFF717171)),
-          label: 'Order',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.history, color: Color(0xFF717171)),
-          label: 'History',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person, color: Color(0xFF717171)),
-          label: 'Profile',
-        ),
-      ],
-      currentIndex: _selectedIndex,
-      selectedItemColor: const Color.fromARGB(255, 133, 133, 133),
-      onTap: _onItemTapped,
+    return Scaffold(
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        elevation: 0,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
+        onTap: _onItemTapped,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history,
+                color: _selectedIndex ==
+                        0 // Changed selectedIndex to _selectedIndex
+                    ? Theme.of(context).primaryColor
+                    : Color(0xFF717171)),
+            label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard,
+                color: _selectedIndex ==
+                        1 // Changed selectedIndex to _selectedIndex
+                    ? Theme.of(context).primaryColor
+                    : Color(0xFF717171)),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person,
+                color: _selectedIndex ==
+                        2 // Changed selectedIndex to _selectedIndex
+                    ? Theme.of(context).primaryColor
+                    : Color(0xFF717171)),
+            label: 'Profile',
+          ),
+        ],
+      ),
     );
   }
 }

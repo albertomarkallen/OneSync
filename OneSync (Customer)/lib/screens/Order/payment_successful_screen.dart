@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Order/order_screen.dart';
 
-class PaymentSuccessfulScreen extends StatelessWidget {
+class PaymentSuccessfulScreen extends StatefulWidget {
   final num totalPrice;
   const PaymentSuccessfulScreen({super.key, required this.totalPrice});
+
+  @override
+  _PaymentSuccessfulScreenState createState() =>
+      _PaymentSuccessfulScreenState();
+}
+
+class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
+  int _selectedIndex =
+      2; // Assuming this is the right index for this screen in your bottom nav
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +35,8 @@ class PaymentSuccessfulScreen extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 15),
-            Text('Total: ₱$totalPrice'),
+            Text(
+                'Total: ₱${widget.totalPrice}'), // Access totalPrice using widget.totalPrice
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -50,7 +64,6 @@ class PaymentSuccessfulScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const Navigation(),
     );
   }
 }

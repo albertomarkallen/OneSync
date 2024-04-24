@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/models/models.dart';
-import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Order/cart_screen.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -13,6 +12,14 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
+  int _selectedIndex = 3; // Assuming 'Dashboard' is the second item
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   List<MenuItem> items = [];
   List<Map<String, dynamic>> convertItemsToMap(List<MenuItem> items) {
     return items
@@ -385,7 +392,6 @@ class _OrderScreenState extends State<OrderScreen> {
               : _buildMenuGrid(),
         ],
       ),
-      bottomNavigationBar: const Navigation(),
       bottomSheet: _buildTotalDisplay(context),
     );
   }
