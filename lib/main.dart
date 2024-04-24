@@ -5,6 +5,7 @@ import 'package:onesync/firebase_options.dart';
 import 'package:onesync/screens/add_product_screen.dart';
 import 'package:onesync/screens/login.dart';
 import 'package:onesync/screens/sales_data_table.dart';
+import 'package:onesync/screens/inventory_tracker_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
         '/addProduct': (context) => AddProductScreen(),
         '/Login': (context) => LoginScreen(),
         '/SalesDataTable': (context) => SalesDataTable(),
+        '/InventoryTracker': (context) => InventoryTrackerScreen(),
       },
       theme: ThemeData(
           // Add your theme customizations here
