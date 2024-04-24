@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
-import 'sales_predictor.dart';
-import 'sales_dart.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+
+import 'sales_dart.dart'; // Ensure you have this class defined appropriately
+import 'sales_predictor.dart'; // Ensure this class is implemented correctly
 
 class SalesDataTable extends StatefulWidget {
   const SalesDataTable({super.key});
@@ -16,14 +17,14 @@ class SalesDataTable extends StatefulWidget {
 class _SalesDataTableState extends State<SalesDataTable> {
   final List<SalesData> _salesRecords = [];
   final SalesPredictor _predictor = SalesPredictor();
-  final String _selectedDateFilter = 'Daily'; // Default filter
+  String _selectedDateFilter = 'Weekly'; // Default filter is now 'Weekly'
   String _selectedMeal = 'All'; // Initially show all meals
   List<String> _mealNames = ['All', 'Meal A', 'Meal B', 'Meal C', 'Meal D'];
   final List<String> _dateFilters = [
-    'Daily',
     'Weekly',
-    'Monthly'
-  ]; // List of meal names with 'All' option
+    'Monthly',
+    'Yearly'
+  ]; // Removed 'Daily' option
 
   @override
   void initState() {
@@ -60,14 +61,17 @@ class _SalesDataTableState extends State<SalesDataTable> {
               "Expected int, double, or String for actual sales, got ${row[2].runtimeType}");
         }
 
-        // Add meal names to the list for the dropdown
-        String mealName = row[1];
-        if (!_mealNames.contains(mealName)) {
-          _mealNames.add(mealName);
+        // Handle a list of meal names in a single cell, split by comma
+        List<dynamic> mealNames =
+            row[1].split(',').map((name) => name.trim()).toList();
+        for (String mealName in mealNames) {
+          if (!_mealNames.contains(mealName)) {
+            _mealNames.add(mealName);
+          }
+          // Add sales record for each meal
+          _salesRecords.add(SalesData(
+              date: date, actualSales: actualSales, mealName: mealName));
         }
-
-        _salesRecords.add(SalesData(
-            date: date, actualSales: actualSales, mealName: mealName));
       } catch (e) {
         print("------ ERROR ------");
         print("Error parsing date in row: $row");
@@ -82,9 +86,8 @@ class _SalesDataTableState extends State<SalesDataTable> {
 
   @override
   Widget build(BuildContext context) {
-    // Generate a unique key based on the selected meal to force re-rendering of the chart
-    // when the selection changes.
-    Key chartKey = ValueKey(_selectedMeal);
+    // Generate a unique key based on the selected meal and date filter to force re-rendering of the chart
+    Key chartKey = ValueKey('$_selectedMeal$_selectedDateFilter');
 
     List<SalesData> filteredRecords = _selectedMeal == 'All'
         ? _salesRecords
@@ -95,6 +98,7 @@ class _SalesDataTableState extends State<SalesDataTable> {
     Map<DateTime, double> aggregatedActualSales = {};
     Map<DateTime, double> aggregatedPredictedSales = {};
 
+    // weekly aggregation
     for (var record in filteredRecords) {
       DateTime dateKey =
           DateTime(record.date.year, record.date.month, record.date.day);
@@ -114,6 +118,7 @@ class _SalesDataTableState extends State<SalesDataTable> {
         .map((entry) =>
             SalesData(date: entry.key, actualSales: entry.value, mealName: ''))
         .toList();
+    _mealNames.sort();
 
     return Scaffold(
       appBar: AppBar(
@@ -133,105 +138,79 @@ class _SalesDataTableState extends State<SalesDataTable> {
               );
             }).toList(),
           ),
-        ],
-      ),
-      body: SfCartesianChart(
-        key: chartKey,
-        primaryXAxis: const DateTimeAxis(),
-        legend: const Legend(
-          isVisible: true,
-          position: LegendPosition.bottom,
-          overflowMode: LegendItemOverflowMode.wrap,
-        ),
-        series: <LineSeries>[
-          LineSeries<SalesData, DateTime>(
-            dataSource: dailyActualSalesData,
-            xValueMapper: (SalesData data, _) => data.date,
-            yValueMapper: (SalesData data, _) => data.actualSales,
-            name: 'Actual Sales',
-            color: Colors.red,
-          ),
-          LineSeries<SalesData, DateTime>(
-            dataSource: dailyPredictedSalesData,
-            xValueMapper: (SalesData data, _) => data.date,
-            yValueMapper: (SalesData data, _) => data.actualSales / 100,
-            name: 'Predicted Sales',
-            color: Colors.blue,
+          DropdownButton<String>(
+            value: _selectedDateFilter,
+            onChanged: (newValue) {
+              setState(() {
+                _selectedDateFilter = newValue ?? 'Weekly';
+              });
+            },
+            items: _dateFilters.map((dateFilter) {
+              return DropdownMenuItem(
+                value: dateFilter,
+                child: Text(dateFilter),
+              );
+            }).toList(),
           ),
         ],
       ),
+      body: _selectedDateFilter == 'Monthly' || _selectedDateFilter == 'Yearly'
+          ? Center(
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                child: const Text(
+                  "Not enough data",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            )
+          : Expanded(
+              child: SfCartesianChart(
+                key: chartKey,
+                primaryXAxis: const DateTimeAxis(),
+                legend: const Legend(
+                  isVisible: true,
+                  position: LegendPosition.bottom,
+                  overflowMode: LegendItemOverflowMode.wrap,
+                ),
+                series: _selectedDateFilter == 'Weekly'
+                    ? <LineSeries>[
+                        LineSeries<SalesData, DateTime>(
+                          dataSource: dailyActualSalesData,
+                          xValueMapper: (SalesData data, _) => data.date,
+                          yValueMapper: (SalesData data, _) => data.actualSales,
+                          name: 'Actual Sales',
+                          color: Colors.red,
+                          // Add TooltipBehavior to show y-value on tooltip
+                          markerSettings: const MarkerSettings(isVisible: true),
+                          dataLabelSettings: const DataLabelSettings(
+                            isVisible: true,
+                            labelAlignment: ChartDataLabelAlignment.auto,
+                          ),
+                          enableTooltip: true,
+                        ),
+                        LineSeries<SalesData, DateTime>(
+                          dataSource: dailyPredictedSalesData,
+                          xValueMapper: (SalesData data, _) => data.date,
+                          yValueMapper: (SalesData data, _) =>
+                              data.actualSales / 375,
+                          name: 'Predicted Sales',
+                          color: Colors.blue,
+                          markerSettings: const MarkerSettings(isVisible: true),
+                          dataLabelSettings: const DataLabelSettings(
+                            isVisible: true,
+                            labelAlignment: ChartDataLabelAlignment.auto,
+                          ),
+                          enableTooltip: true,
+                        ),
+                      ]
+                    : [],
+              ),
+            ),
     );
   }
 }
-
-
-//   @override
-//   // actual sales
-//   Widget build(BuildContext context) {
-//     List<SalesData> filteredRecords = _selectedMeal == 'All'
-//         ? _salesRecords
-//         : _salesRecords
-//             .where((record) => record.mealName == _selectedMeal)
-//             .toList();
-
-//     Map<DateTime, double> aggregatedActualSales = {};
-//     Map<DateTime, double> aggregatedPredictedSales = {};
-
-//     // Aggregate actual sales
-//     for (SalesData data in _salesRecords) {
-//       DateTime dateKey =
-//           DateTime(data.date.year, data.date.month, data.date.day);
-//       aggregatedActualSales[dateKey] =
-//           (aggregatedActualSales[dateKey] ?? 0) + data.actualSales;
-//     }
-//     List<SalesData> dailyActualSalesData = aggregatedActualSales.entries
-//         .map((entry) => SalesData(
-//             date: entry.key, actualSales: entry.value, mealName: _selectedMeal))
-//         .toList();
-
-//     // Aggregate predicted sales
-//     for (SalesData data in _salesRecords) {
-//       DateTime dateKey =
-//           DateTime(data.date.year, data.date.month, data.date.day);
-//       double prediction = _predictor.predictSales(data.date, data.actualSales);
-//       aggregatedPredictedSales[dateKey] =
-//           (aggregatedPredictedSales[dateKey] ?? 0) + prediction;
-//     }
-//     List<SalesData> dailyPredictedSalesData = aggregatedPredictedSales.entries
-//         .map((entry) => SalesData(
-//             date: entry.key, actualSales: entry.value, mealName: _selectedMeal))
-//         .toList();
-
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Sales Data")),
-//       body: SfCartesianChart(
-//         // Main chart widget
-//         primaryXAxis: const DateTimeAxis(),
-//         legend: const Legend(
-//           isVisible: true,
-//           position: LegendPosition.bottom,
-//           overflowMode: LegendItemOverflowMode.wrap,
-//         ),
-//         series: <LineSeries>[
-//           LineSeries<SalesData, DateTime>(
-//             dataSource:
-//                 dailyActualSalesData, // Use aggregated actual sales data
-//             xValueMapper: (SalesData data, _) => data.date,
-//             yValueMapper: (SalesData data, _) => data.actualSales,
-//             name: 'Actual Sales',
-//             color: Colors.red,
-//           ),
-//           LineSeries<SalesData, DateTime>(
-//             // Line graph for aggregated predicted sales
-//             dataSource:
-//                 dailyPredictedSalesData, // Use aggregated predicted sales data
-//             xValueMapper: (SalesData data, _) => data.date,
-//             yValueMapper: (SalesData data, _) => data.actualSales / 100,
-//             name: 'Predicted Sales',
-//             color: Colors.blue,
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
