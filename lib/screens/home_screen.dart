@@ -1,6 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:onesync/navigation.dart';
+import 'package:onesync/screens/cashout_screen.dart';
+
+class CondensedSalesDataTable extends StatelessWidget {
+  const CondensedSalesDataTable({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sales Data Table',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          // Placeholder for condensed sales data table
+          // Replace this with your actual data representation
+          Container(
+            height: 200, // Adjust the height as needed
+            color: Colors.grey[300],
+            child: Center(
+              child: Text(
+                'Condensed Sales Data',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -10,133 +56,327 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Variables for dashboard metrics
-  int totalInventory = 0;
-  double totalSales = 0.0;
-  String bestSellingProduct = '';
+  List<DocumentSnapshot> _productDocs = [];
+  int _balance = 0;
 
-  // Function for navigation
-  void _navigateToSalesDataTable() {
-    Navigator.of(context).pushNamed('/SalesDataTable');
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+    _fetchBalance();
+  }
+
+  Future<void> _fetchProducts() async {
+    try {
+      String userID = FirebaseAuth.instance.currentUser!.uid;
+      var snapshot = await FirebaseFirestore.instance
+          .collection('Menu')
+          .doc(userID)
+          .collection('vendorProducts')
+          .orderBy('stock')
+          .limit(5)
+          .get();
+
+      setState(() {
+        _productDocs = snapshot.docs;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching products')),
+      );
+    }
+  }
+
+  Future<void> _fetchBalance() async {
+    try {
+      String currentUserId = await getCurrentUserId();
+
+      final vendorDoc = await FirebaseFirestore.instance
+          .collection('Menu')
+          .doc(currentUserId)
+          .get();
+
+      if (vendorDoc.exists) {
+        setState(() {
+          _balance = vendorDoc.get('Balance') ?? 0;
+        });
+      } else {
+        print('Vendor profile not found');
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  double _calculateContainerHeight() {
+    const double itemHeight = 24.0;
+    const double paddingHeight = 16.0 * 2;
+    return (_productDocs.length * itemHeight) + paddingHeight;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('OneSync'),
+        title: Text(
+          'OneSync',
+          style: TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 28,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w700,
+            height: 0.05,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Dashboard Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Wrap(
-                spacing: 16.0,
-                runSpacing: 16.0,
-                children: [
-                  DashboardCard(
-                    title: 'Inventory Tracker',
-                    value: totalInventory.toString(),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/InventoryTracker');
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.blue, // Set the background color to blue
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Balance',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                                color:
+                                    Colors.white, // Set the text color to white
+                              ),
+                            ),
+                            Text(
+                              'PHP $_balance', // Use your balance variable here
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize:
+                                    36.0, // Increased font size for balance
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    Colors.white, // Set the text color to white
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      VerticalDivider(
+                        color: Colors.white, // Divider color
+                        thickness: 1,
+                        indent: 10,
+                        endIndent: 10,
+                        width: 20,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CashOutScreen(),
+                              ),
+                            ).then((updatedBalance) {
+                              if (updatedBalance != null) {
+                                setState(() {
+                                  _balance =
+                                      updatedBalance; // Update the balance in your state
+                                });
+                              }
+                            });
+                          },
+                          child: Text(
+                            'Cash Out',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // Text color is blue
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side:
+                                BorderSide(color: Colors.white), // Border color
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  DashboardCard(
-                    title: 'Sales Forecast',
-                    value: totalSales.toStringAsFixed(2),
-                  ),
-                  DashboardCard(
-                    title: 'Best Selling',
-                    value: bestSellingProduct,
-                  ),
-                ],
+                ),
               ),
             ),
-
-            // Button to View Sales Data Table
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _navigateToSalesDataTable,
-                child: const Text('View Sales Data Table'),
+            const SizedBox(height: 16.0),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/InventoryTracker');
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Inventory Tracker',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Container(
+                      height: _calculateContainerHeight(),
+                      child: SingleChildScrollView(
+                        child: _buildProductList(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            // Example Product Listing Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Product Listing',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  // Replace this with logic to fetch products from your data source (e.g., Firestore)
-                  FutureBuilder<QuerySnapshot>(
-                      future: FirebaseFirestore.instance
-                          .collection('products')
-                          .get(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else {
-                          return ListView.builder(
-                              shrinkWrap:
-                                  true, // Important for use inside a column
-                              physics:
-                                  const NeverScrollableScrollPhysics(), // Prevent scrolling of the list
-                              itemCount: snapshot.data!.docs.length,
-                              itemBuilder: (context, index) {
-                                DocumentSnapshot productDoc =
-                                    snapshot.data!.docs[index];
-                                return ListTile(
-                                  title: Text(productDoc['name']),
-                                  subtitle: Text('Price: \$' +
-                                      productDoc['price'].toString()),
-                                );
-                              });
-                        }
-                      }),
-                ],
+            const SizedBox(height: 16.0),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/SalesDataTable');
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sales Forecast',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: Center(
+                        child: Text(
+                          'Sales Forecast Data',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: Navigation(),
+      bottomNavigationBar: const Navigation(),
     );
   }
-}
 
-class DashboardCard extends StatelessWidget {
-  final String title;
-  final String value;
+  Widget _buildProductList() {
+    if (_productDocs.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      return ListView.builder(
+        itemCount: _productDocs.length,
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemBuilder: (context, index) {
+          final productDoc = _productDocs[index];
+          final String productName = productDoc['name'];
+          final int stock = productDoc['stock'];
 
-  const DashboardCard({
-    Key? key,
-    required this.title,
-    required this.value,
-  }) : super(key: key);
+          double stockPercentage = stock / 60;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8.0),
-          Text(value, style: const TextStyle(fontSize: 18.0)),
-        ],
-      ),
-    );
+          Color indicatorColor;
+          if (stockPercentage < 0.17) {
+            indicatorColor = Color(0xFFFF5A4F);
+          } else if (stockPercentage >= 0.17 && stockPercentage <= 0.5) {
+            indicatorColor = Color(0xFFFFC670);
+          } else {
+            indicatorColor = Color(0xFF4196F0);
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    productName,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 5,
+                  child: LinearProgressIndicator(
+                    value: stockPercentage,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(indicatorColor),
+                    minHeight: 10,
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '$stock/60',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: indicatorColor,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
+    }
   }
 }

@@ -16,26 +16,21 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   List<MenuItem> items = [];
-  List<Map<String, dynamic>> convertItemsToMap(List<MenuItem> items) {
-    return items
-        .map((item) => {
-              'name': item.name,
-              'price': item.price,
-              'stock': item.stock,
-              'imageUrl': item.imageUrl,
-              'category': item.category
-            })
-        .toList();
-  }
-
+  List<MenuItem> displayedItems = [];
+  Set<String> categories = {'All'}; // Include 'All' for displaying all items
+  String selectedCategory = 'All'; // Current selected category
+  final TextEditingController _searchController = TextEditingController();
   Map<String, int> cart = {};
   bool isLoading = true;
-  final TextEditingController _searchController = TextEditingController();
+  String _selectedLabel = 'All'; // Selected label for filter category
 
   @override
   void initState() {
     super.initState();
     _fetchItems();
+    _searchController.addListener(() {
+      _filterItems(_searchController.text);
+    });
   }
 
   @override
@@ -47,6 +42,7 @@ class _OrderScreenState extends State<OrderScreen> {
   Future<void> _fetchItems() async {
     try {
       String userID = FirebaseAuth.instance.currentUser!.uid;
+      print('User ID: $userID');
       var snapshot = await FirebaseFirestore.instance
           .collection('Menu')
           .doc(userID)
@@ -54,11 +50,16 @@ class _OrderScreenState extends State<OrderScreen> {
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        var fetchedItems =
-            snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
+        List<MenuItem> fetchedItems = [];
+        snapshot.docs.forEach((doc) {
+          MenuItem item = MenuItem.snapshot(doc);
+          fetchedItems.add(item);
+          categories.add(item.category); // Add category to the set
+        });
 
         setState(() {
           items = fetchedItems;
+          displayedItems = fetchedItems;
           isLoading = false;
         });
       } else {
@@ -69,7 +70,9 @@ class _OrderScreenState extends State<OrderScreen> {
           );
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Error fetching items: $e');
+      print('Stack Trace: $stackTrace');
       setState(() {
         isLoading = false;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,43 +83,96 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   void _filterItems(String query) {
-    String lowerCaseQuery = query.toLowerCase();
     setState(() {
-      items = items.where((item) {
-        return item.name.toLowerCase().contains(lowerCaseQuery) ||
-            item.category.toLowerCase().contains(lowerCaseQuery);
+      String lowerCaseQuery = query.toLowerCase();
+      displayedItems = items.where((item) {
+        return (selectedCategory == 'All' ||
+                item.category.toLowerCase() == selectedCategory) &&
+            (item.name.toLowerCase().contains(lowerCaseQuery) ||
+                item.category.toLowerCase().contains(lowerCaseQuery));
       }).toList();
     });
   }
 
-  void _addToCart(MenuItem item) {
+  void _onCategorySelected(String category) {
     setState(() {
-      if (item.stock > 0) {
-        cart[item.name] = (cart[item.name] ?? 0) + 1;
-        item.stock--;
+      if (category.toLowerCase() == 'all') {
+        selectedCategory = 'All';
+        displayedItems = items;
+      } else {
+        selectedCategory = category.toLowerCase();
+        _filterItems(_searchController.text);
       }
     });
   }
 
+  void _addToCart(MenuItem item) {
+    if (item.stock > 0) {
+      setState(() {
+        cart[item.name] = (cart[item.name] ?? 0) + 1;
+        item.stock--;
+      });
+    }
+  }
+
   void _removeFromCart(MenuItem item) {
-    setState(() {
-      if (cart[item.name]! > 0) {
+    if (cart[item.name]! > 0) {
+      setState(() {
         cart[item.name] = (cart[item.name] ?? 0) - 1;
         if (cart[item.name] == 0) {
           cart.remove(item.name);
         }
         item.stock++;
-      }
-    });
+      });
+    }
   }
 
   int _calculateTotal() {
-    int total = 0;
-    cart.forEach((key, quantity) {
-      final item = items.firstWhere((item) => item.name == key);
-      total += item.price * quantity;
-    });
-    return total;
+    return cart.entries
+        .map((entry) =>
+            items.firstWhere((item) => item.name == entry.key).price *
+            entry.value)
+        .reduce((value, element) => value + element);
+  }
+
+  Widget _buildFilterCategory() {
+    return Container(
+      margin: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
+      child: SizedBox(
+        height: 35,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: categories.map((category) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: _selectedLabelCategory(category),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _selectedLabelCategory(String label) {
+    return TextButton(
+      onPressed: () => _onCategorySelected(label),
+      style: TextButton.styleFrom(
+        foregroundColor: _selectedLabel == label ? Colors.white : Colors.blue,
+        backgroundColor: _selectedLabel == label ? Colors.blue : null,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+        side: _selectedLabel == label ? null : BorderSide(color: Colors.blue),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    );
   }
 
   Widget _buildSearchBar() {
@@ -126,15 +182,40 @@ class _OrderScreenState extends State<OrderScreen> {
         height: 40.0,
         child: TextField(
           controller: _searchController,
-          onChanged: _filterItems,
           decoration: InputDecoration(
-            labelText: 'Search',
-            suffixIcon: Icon(Icons.search),
+            contentPadding: EdgeInsets.all(8.0),
+            hintText: 'Search',
+            prefixIcon: Icon(Icons.search),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25.0),
+              borderSide: BorderSide(color: Color(0xFF717171)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF717171)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF717171)),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMenuGrid() {
+    return Expanded(
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16.0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 6.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.88,
+        ),
+        itemCount: displayedItems.length,
+        itemBuilder: (context, index) {
+          return _menuList(
+              context, displayedItems[index], _addToCart, _removeFromCart);
+        },
       ),
     );
   }
@@ -164,23 +245,16 @@ class _OrderScreenState extends State<OrderScreen> {
             Align(
               alignment: Alignment.topRight,
               child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.lightGreen, // Light green circle color
-                ),
                 child: IconButton(
                   icon: cartQuantity > 0
                       ? Text(cartQuantity.toString(),
-                          style: TextStyle(color: Colors.white))
-                      : Icon(Icons.add, color: Colors.white),
+                          style: TextStyle(color: Colors.blue))
+                      : Icon(Icons.add, color: Colors.blue),
                   onPressed: () {
                     if (cartQuantity > 0) {
                       addToCart(item);
                     } else {
                       addToCart(item);
-                      setState(() {
-                        cart[item.name] = 1;
-                      });
                     }
                   },
                 ),
@@ -270,101 +344,87 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildMenuGrid() {
-    return Expanded(
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // Change cross axis count as needed
-          crossAxisSpacing: 6.0,
-          mainAxisSpacing: 8.0,
-          childAspectRatio: 0.88,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return _menuList(context, items[index], _addToCart, _removeFromCart);
-        },
-      ),
-    );
-  }
-
-  Widget? _buildTotalDisplay(BuildContext context) {
+  Widget _buildTotalDisplay() {
     int totalItems = cart.values
         .fold(0, (previousValue, quantity) => previousValue + quantity);
-    String itemsText = totalItems == 1 ? 'Item' : 'Items';
-
-    if (totalItems > 0) {
-      return Container(
-        color: Colors.blue[700], // Use a deep blue color for the background
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        child: SafeArea(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return totalItems > 0
+        ? Container(
+            color: Colors.blue[700], // Use a deep blue color for the background
+            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: SafeArea(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '$totalItems $itemsText',
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$totalItems Items',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Total: ₱${_calculateTotal()}',
+                        style: TextStyle(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'Total: ₱${_calculateTotal()}',
-                    style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CartScreen(
+                            cart: cart,
+                            items: items
+                                .map((item) => {
+                                      'name': item.name,
+                                      'price': item.price,
+                                      'stock': item.stock,
+                                      'imageUrl': item.imageUrl,
+                                      'category': item.category
+                                    })
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.blue[800],
+                      backgroundColor: Colors.white, // Button color
+                      elevation: 0, // Removes shadow for a flat design
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            5), // Adjust the radius as needed
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          'View Order',
+                          style:
+                              TextStyle(color: Colors.blue[800]), // Text color
+                        ),
+                        Icon(
+                          Icons.arrow_right_alt,
+                          color: Colors.blue[800],
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CartScreen(
-                          cart: cart, items: convertItemsToMap(items)),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.blue[800],
-                  backgroundColor: Colors.white, // Button color
-                  elevation: 0, // Removes shadow for a flat design
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(5), // Adjust the radius as needed
-                  ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'View Order',
-                        style: TextStyle(color: Colors.blue[800]), // Text color
-                      ),
-                      Icon(
-                        Icons.arrow_right_alt,
-                        color: Colors.blue[800],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      return null; // Return null when there are no items in the cart
-    }
+            ),
+          )
+        : SizedBox.shrink();
   }
 
   @override
@@ -382,13 +442,14 @@ class _OrderScreenState extends State<OrderScreen> {
       body: Column(
         children: [
           _buildSearchBar(),
+          _buildFilterCategory(),
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : _buildMenuGrid(),
         ],
       ),
       bottomNavigationBar: const Navigation(),
-      bottomSheet: _buildTotalDisplay(context),
+      bottomSheet: _buildTotalDisplay(),
     );
   }
 }

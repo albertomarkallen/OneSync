@@ -127,27 +127,26 @@ class _SalesDataTableState extends State<SalesDataTable> {
   }
 }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Sales Data")),
-//       body: DataTable(
-//         columns: const [
-//           DataColumn(label: Text("Date")),
-//           DataColumn(label: Text("Actual Sales")),
-//           DataColumn(label: Text("Predicted Sales")),
-//         ],
-//         rows: _salesRecords
-//             .map((data) => DataRow(cells: [
-//                   DataCell(Text(data.date.toString())),
-//                   DataCell(Text(data.actualSales.toString())),
-//                   DataCell(Text(
-//                       (_predictor.predictSales(data.date, data.actualSales) /
-//                               100)
-//                           .toString())),
-//                 ]))
-//             .toList(),
-//       ),
-//     );
-//   }
-// }
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(title: const Text("Sales Data")),
+  //     body: DataTable(
+  //       columns: const [
+  //         DataColumn(label: Text("Date")),
+  //         DataColumn(label: Text("Actual Sales")),
+  //         DataColumn(label: Text("Predicted Sales")),
+  //       ],
+  //       rows: _salesRecords
+  //           .map((data) => DataRow(cells: [
+  //                 DataCell(Text(data.date.toString())),
+  //                 DataCell(Text(data.actualSales.toString())),
+  //                 DataCell(Text(
+  //                     (_predictor.predictSales(data.date, data.actualSales) /
+  //                             100)
+  //                         .toString())),
+  //               ]))
+  //           .toList(),
+  //     ),
+  //   );
+  // }
