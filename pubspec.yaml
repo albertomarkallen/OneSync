@@ -80,6 +80,12 @@ flutter:
         - asset: fonts/Poppins-Regular.ttf
         - asset: fonts/Poppins-Bold.ttf  
           weight: 700 
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter-Regular.ttf
+        - asset: fonts/Inter-Bold.ttf
+        - asset: fonts/Inter-Italic.ttf
+       
   # To add assets to your application, add an assets section, like this:
   assets:
     - "assets/"
