@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 import 'package:onesync/navigation.dart';
 import 'package:intl/intl.dart';
 
@@ -13,81 +14,108 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   Map<String, dynamic>? _selectedOrder;
 
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order History'),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('Transactions')
-            .orderBy('date', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Error fetching data'));
-          } else if (!snapshot.hasData) {
+      body: FutureBuilder<String>(
+        future: getCurrentUserId(),
+        builder: (context, userSnapshot) {
+          if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          } else if (userSnapshot.hasError) {
+            return const Center(child: Text('Error fetching user data'));
           } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                DocumentSnapshot orderDoc = snapshot.data!.docs[index];
-                Timestamp timestamp = orderDoc.get('date');
-                DateTime orderDate =
-                    timestamp.toDate().add(const Duration(hours: 8));
+            String currentUid = userSnapshot.data ?? '';
 
-                return Card(
-                    margin: const EdgeInsets.all(12.0),
-                    elevation: 2.0,
-                    child: InkWell(
-                        onTap: () => _showOrderDetails(orderDoc),
-                        child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                                // Distribute available space equally between columns
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // Column containing transaction number and total price
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        orderDoc.id,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16.0,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        '${DateFormat('yyyy-MM-dd').format(orderDate)}',
-                                        style: const TextStyle(fontSize: 12.0),
-                                      ),
-                                    ],
-                                  ),
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Transactions')
+                  .where('currentUid',
+                      isEqualTo: currentUid) // Filter by currentUid
+                  .orderBy('date', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error fetching data'));
+                } else if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                } else {
+                  return ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      DocumentSnapshot orderDoc = snapshot.data!.docs[index];
+                      Timestamp timestamp = orderDoc.get('date');
+                      DateTime orderDate =
+                          timestamp.toDate().add(const Duration(hours: 8));
 
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '₱${orderDoc.get('totalPrice')}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16.0,
+                      return Card(
+                          margin: const EdgeInsets.all(12.0),
+                          elevation: 2.0,
+                          child: InkWell(
+                              onTap: () => _showOrderDetails(orderDoc),
+                              child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                      // Distribute available space equally between columns
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Column containing transaction number and total price
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              orderDoc.id,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16.0,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              '${DateFormat('yyyy-MM-dd').format(orderDate)}',
+                                              style: const TextStyle(
+                                                  fontSize: 12.0),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        '${DateFormat('hh:mm a').format(orderDate)}',
-                                        style: const TextStyle(fontSize: 12.0),
-                                      )
-                                    ],
-                                  ),
-                                ]))));
+
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              '₱${orderDoc.get('totalPrice')}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16.0,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              '${DateFormat('hh:mm a').format(orderDate)}',
+                                              style: const TextStyle(
+                                                  fontSize: 12.0),
+                                            )
+                                          ],
+                                        ),
+                                      ]))));
+                    },
+                  );
+                }
               },
             );
           }
