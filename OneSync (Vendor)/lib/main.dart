@@ -4,7 +4,9 @@ import 'package:onesync/firebase_options.dart';
 import 'package:onesync/screens/(Auth)/authenticationWrapper.dart';
 import 'package:onesync/screens/(Auth)/login.dart';
 import 'package:onesync/screens/Forecast/sales_data_table.dart';
+import 'package:onesync/screens/Home/cashout_screen.dart';
 import 'package:onesync/screens/MenuList/add_product_screen.dart';
+import 'package:onesync/screens/Home/inventory_tracker_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +24,8 @@ class MyApp extends StatelessWidget {
         '/addProduct': (context) => const AddProductScreen(),
         '/Login': (context) => LoginScreen(),
         '/SalesDataTable': (context) => const SalesDataTable(),
+        '/InventoryTracker': (context) => InventoryTrackerScreen(),
+        '/Cashout': (context) => CashOutScreen(),
       },
       theme: ThemeData(
           // Add your theme customizations here
