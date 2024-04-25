@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
+import 'package:onesync/screens/Forecast/sales_data_table.dart';
 import 'package:onesync/screens/Home/cashout_screen.dart';
 
 class CondensedSalesDataTable extends StatelessWidget {
@@ -9,10 +10,10 @@ class CondensedSalesDataTable extends StatelessWidget {
   final int totalTransactions;
 
   const CondensedSalesDataTable({
-    Key? key,
+    super.key,
     required this.totalSales,
     required this.totalTransactions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +56,7 @@ class CondensedSalesDataTable extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -205,6 +206,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             });
                           },
+                          style: OutlinedButton.styleFrom(
+                            side:
+                                BorderSide(color: Colors.white), // Border color
+                            foregroundColor: Colors.white,
+                          ),
                           child: Text(
                             'Cash Out',
                             style: TextStyle(
@@ -212,11 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white, // Text color is blue
                             ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side:
-                                BorderSide(color: Colors.white), // Border color
-                            foregroundColor: Colors.white,
                           ),
                         ),
                       ),
@@ -248,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 8.0),
-                    Container(
+                    SizedBox(
                       height: _calculateContainerHeight(),
                       child: SingleChildScrollView(
                         child: _buildProductList(),
@@ -285,13 +286,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 200,
                       color: Colors.grey[300],
                       child: Center(
-                        child: Text(
-                          'Sales Forecast Data',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                          ),
-                        ),
+                        // Replace this with your SalesDataTable widget
+                        child: SalesDataTable(),
                       ),
                     ),
                   ],

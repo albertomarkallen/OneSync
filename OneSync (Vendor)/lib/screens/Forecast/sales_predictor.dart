@@ -45,19 +45,42 @@ class SalesPredictor {
 
   // Prepare the input data for the model
   List<double> prepareInputData(DateTime date, double pastSales) {
-    // Normalize the date features
-    double yearNormalized = (date.year - 2000) / (2023 - 2000);
-    double monthNormalized = (date.month - 1) / (12 - 1);
-    double dayNormalized = (date.day - 1) / (31 - 1);
-    double dayOfWeekNormalized = (date.weekday - 1) / (7 - 1);
-    int weekOfYear = getWeekOfYear(date);
-    double weekOfYearNormalized = (weekOfYear - 1) / (52 - 1);
+    // Normalize the date features based on the actual range of the data
 
+    // Year normalization remains the same since all data is from 2024
+    double yearNormalized = (date.year - 2024) / (2024 - 2024 + 1);
+
+    // Month normalization between April (4) and May (5)
+    double monthNormalized = (date.month - 4) / (5 - 4);
+
+    // Day normalization: April has 30 days, use 31 for the calculation to handle May correctly
+    double dayNormalized = (date.day - 1) / (31 - 1);
+
+    // Day of week normalization (1-7)
+    double dayOfWeekNormalized = (date.weekday - 1) / (7 - 1);
+
+    // Week of year normalization based on the specific weeks occurring in the range
+    int startWeekOfYear = getWeekOfYear(DateTime(2024, 4, 22));
+    int endWeekOfYear = getWeekOfYear(DateTime(2024, 5, 4));
+    // int weekOfYear = getWeekOfYear(date);
+    int futureWeekOfYear = getWeekOfYear(DateTime(2024, 4, 30));
+    double weekOfYearNormalized = (futureWeekOfYear - startWeekOfYear) /
+        (endWeekOfYear - startWeekOfYear);
+
+    // Date ordinal normalization based on the start and end date ordinals
+    double startOrdinal =
+        DateTime(2024, 4, 22).toUtc().millisecondsSinceEpoch / 86400000 +
+            719162;
+    double endOrdinal =
+        DateTime(2024, 5, 4).toUtc().millisecondsSinceEpoch / 86400000 + 719162;
     double dateOrdinal =
         date.toUtc().millisecondsSinceEpoch / 86400000 + 719162;
-    double dateOrdinalScaled = (dateOrdinal - 730120) / (738061 - 730120);
+    double dateOrdinalScaled =
+        (dateOrdinal - startOrdinal) / (endOrdinal - startOrdinal);
 
-    double ordersNormalized = (pastSales - 1) / (5 - 1);
+    // Normalize sales data based on expected range (adjust max if known)
+    double ordersNormalized = (pastSales - 1) /
+        (5 - 1); // Assuming '5' is the maximum sales value observed or expected
 
     return [
       yearNormalized,
@@ -66,7 +89,8 @@ class SalesPredictor {
       dayOfWeekNormalized,
       weekOfYearNormalized,
       dateOrdinalScaled,
-      ordersNormalized
+      ordersNormalized,
+      futureWeekOfYear.toDouble()
     ];
   }
 
