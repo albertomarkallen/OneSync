@@ -1,18 +1,18 @@
-import 'dart:math'; // Import to generate random codes
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
-import 'package:onesync/screens/Order/payment_successful_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:onesync/screens//Order/payment_successful_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math'; // Import to generate random codes
 
 class PaymentScreenPage extends StatefulWidget {
   final num totalPrice;
   final Map<String, int> cart;
 
   const PaymentScreenPage(
-      {super.key, required this.totalPrice, required this.cart});
+      {Key? key, required this.totalPrice, required this.cart})
+      : super(key: key);
 
   @override
   _PaymentScreenPageState createState() => _PaymentScreenPageState();
@@ -22,6 +22,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   bool _isLoading = false;
   String? _rfidUid;
   String transactionId = '';
+  String? currentUid; // Field to store currentUid
 
   // Generate a random 8-digit alphanumeric code
   String _generateRandomTransactionId() {
@@ -59,16 +60,13 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       FirebaseFirestore db = FirebaseFirestore.instance;
       int total = widget.totalPrice.toInt();
 
-      // Fetch Vendor Data with Error Handling
-      String currentUserId = await getCurrentUserId();
-      final vendorDoc = await db.collection('Menu').doc(currentUserId).get();
+      currentUid = await getCurrentUserId(); // Store currentUid
+
+      final vendorDoc = await db.collection('Menu').doc(currentUid).get();
 
       if (!vendorDoc.exists) {
         throw Exception('Vendor not found');
       }
-
-      DocumentSnapshot vendorSnapshot =
-          await db.collection('Menu').doc(currentUserId).get();
 
       QuerySnapshot studentSnapshot = await db
           .collection('Student-Users')
@@ -76,8 +74,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
           .get();
 
       if (studentSnapshot.docs.isEmpty) {
-        print('Student with UID $_rfidUid not found in Firestore database');
-        // Handle student not found (display a message, etc.)
+        print('Student with UID $_rfidUid not found');
         return;
       }
 
@@ -97,59 +94,65 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
 
       int updatedBalance = studentBalance - total;
 
-      // Find the vendor's document based on the RFID
-      QuerySnapshot vendorRFIDSnapshot = await FirebaseFirestore.instance
-          .collection('Menu') // Replace 'rfids' with your collection name
-          .where(currentUserId)
-          .get();
-
-      if (vendorRFIDSnapshot.docs.isEmpty) {
-        print('Vendor RFID record not found');
-
-        return;
+      // Update stocks in vendor's Menu
+      List<Map<String, dynamic>> updatedItems = [];
+      for (var entry in widget.cart.entries) {
+        DocumentSnapshot itemSnapshot = await db
+            .collection('Menu')
+            .doc(currentUid)
+            .collection('vendorProducts')
+            .doc(entry.key)
+            .get();
+        if (!itemSnapshot.exists) {
+          throw Exception("Item with id ${entry.key} not found");
+        }
+        int currentStock = itemSnapshot.get('stock');
+        if (currentStock < entry.value) {
+          throw Exception("Not enough stock for ${itemSnapshot.get('name')}");
+        }
+        updatedItems
+            .add({'id': entry.key, 'newStock': currentStock - entry.value});
       }
 
-      vendorRFIDSnapshot.docs.first.get('UID');
-      DocumentSnapshot linkedVendorSnapshot =
-          await db.collection('Menu').doc(currentUserId).get();
-      int vendorBalance =
-          linkedVendorSnapshot.exists ? linkedVendorSnapshot.get('Balance') : 0;
-      int updatedVendorBalance = vendorBalance + total;
-
       return db.runTransaction((transaction) async {
+        // Update customer balance
         transaction.update(
             studentSnapshot.docs.first.reference, {'Balance': updatedBalance});
-        transaction.update(db.collection('Menu').doc(currentUserId),
-            {'Balance': updatedVendorBalance});
 
+        // Update each item stock in the transaction
+        for (var item in updatedItems) {
+          DocumentReference itemRef = db
+              .collection('Menu')
+              .doc(currentUid)
+              .collection('vendorProducts')
+              .doc(item['id']);
+          transaction.update(itemRef, {'stock': item['newStock']});
+        }
+
+        // Other transaction operations (e.g., log the transaction)
         Map<String, dynamic> orderData = {
           'date': Timestamp.fromDate(DateTime.now()),
           'totalPrice': total,
           'items': widget.cart.entries
               .map((entry) => {'name': entry.key, 'quantity': entry.value})
               .toList(),
-          'rfid': _rfidUid
+          'rfid': _rfidUid,
+          'currentUid': currentUid, // Include currentUid in orderData
         };
 
         transaction.set(
             db.collection('Transactions').doc(transactionId), orderData);
 
-        // Update the vendor's RFID balance
-        await _updateVendorRFIDBalance(_rfidUid!, total);
-
         return null;
       }).then((_) {
-        print('Order successfully submitted and balances updated!');
-        // _clearDatabase();
+        print('Order successfully submitted, balances and stocks updated!');
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                PaymentSuccessfulScreen(totalPrice: widget.totalPrice),
-          ),
-        );
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    PaymentSuccessfulScreen(totalPrice: widget.totalPrice)));
       }).catchError((error) {
-        print('Failed to update balances: $error');
+        print('Failed to update balances and stocks: $error');
         setState(() {
           _isLoading = false;
         });
@@ -172,36 +175,14 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     }
   }
 
-  Future<void> _updateVendorRFIDBalance(String rfid, int amount) async {
-    try {
-      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-      final vendorRFIDDoc = await FirebaseFirestore.instance
-          .collection('rfids') // Replace with your collection name
-          .where('uid', isEqualTo: currentUserId)
-          .get();
-
-      if (vendorRFIDDoc.docs.isNotEmpty) {
-        final vendorRFIDRef = vendorRFIDDoc.docs.first.reference;
-        final vendorData = await vendorRFIDRef.get(); // Fetch the document
-        int currentBalance = vendorData.get('balance') as int ?? 0;
-        await vendorRFIDRef.update({'balance': currentBalance + amount});
-      } else {
-        print('Vendor RFID document not found');
-      }
-    } catch (e) {
-      print('Error updating vendor RFID balance: $e');
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
     }
   }
-
-  // Future<void> _clearDatabase() async {
-  //   try {
-  //     final dbRef = FirebaseDatabase.instance.ref('/');
-  //     await dbRef.remove();
-  //     print('Database cleared successfully');
-  //   } catch (error) {
-  //     print('Error clearing database: $error');
-  //   }
-  // }
 
   @override
   void initState() {
@@ -213,7 +194,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payment in Progress'),
+        title: Text('Payment in Progress'),
       ),
       body: Center(
         child: Column(
@@ -223,28 +204,19 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
               _rfidUid == null
                   ? 'Please tap your RFID card'
                   : 'Order submitted',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Text(
               'Total: ₱${widget.totalPrice}',
-              style: const TextStyle(fontSize: 18),
+              style: TextStyle(fontSize: 18),
             ),
-            const SizedBox(height: 40),
-            if (_isLoading) const CircularProgressIndicator(),
+            SizedBox(height: 40),
+            if (_isLoading) CircularProgressIndicator(),
           ],
         ),
       ),
-      bottomNavigationBar: const Navigation(),
+      bottomNavigationBar: Navigation(),
     );
-  }
-
-  Future<String> getCurrentUserId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return user.uid;
-    } else {
-      throw Exception('User not logged in');
-    }
   }
 }
