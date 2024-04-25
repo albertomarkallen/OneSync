@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/firebase_options.dart';
-import 'package:onesync/screens/(Auth)/login.dart';
+import 'package:onesync/screens/(Auth)/signUp.dart';
 import 'package:onesync/screens/Dashboard/dashboard_screen.dart';
 
 Future<void> main() async {
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        '/Login': (context) => LoginScreen(),
+        '/SignUp': (context) => SignUpScreen(),
       },
       theme: ThemeData(
           // Add your theme customizations here
