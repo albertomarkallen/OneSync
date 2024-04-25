@@ -3,8 +3,9 @@ import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Dashboard/transaction_history.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final int selectedIndex;
-  const DashboardScreen({super.key, required this.selectedIndex});
+  const DashboardScreen({
+    super.key,
+  });
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
@@ -146,9 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: Navigation(
-        selectedIndex: widget.selectedIndex,
-      ),
+      bottomNavigationBar: Navigation(),
     );
   }
 }

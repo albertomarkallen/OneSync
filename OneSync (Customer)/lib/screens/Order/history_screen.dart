@@ -4,8 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:onesync/navigation.dart';
 
 class HistoryScreen extends StatefulWidget {
-  final int selectedIndex;
-  const HistoryScreen({super.key, required this.selectedIndex});
+  const HistoryScreen({super.key});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -103,9 +102,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
         },
       ),
-      bottomNavigationBar: Navigation(
-        selectedIndex: widget.selectedIndex,
-      ),
+      bottomNavigationBar: Navigation(),
     );
   }
 

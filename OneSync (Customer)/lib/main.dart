@@ -22,9 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
           // Add your theme customizations here
           ),
-      home: DashboardScreen(
-        selectedIndex: 0,
-      ), // Use AuthenticationWrapper as the first screen
+      home: DashboardScreen(), // Use AuthenticationWrapper as the first screen
     );
   }
 }

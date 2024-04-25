@@ -6,9 +6,9 @@ import 'package:onesync/screens/Profile/update_password.dart';
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final int selectedIndex;
-
-  const ProfileScreen({super.key, required this.selectedIndex});
+  const ProfileScreen({
+    super.key,
+  });
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -168,9 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Navigation(
-        selectedIndex: widget.selectedIndex,
-      ),
+      bottomNavigationBar: Navigation(),
     );
   }
 }
