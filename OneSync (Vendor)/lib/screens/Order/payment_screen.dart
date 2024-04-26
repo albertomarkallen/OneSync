@@ -92,7 +92,9 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
         return;
       }
 
-      int updatedBalance = studentBalance - total;
+      int updatedStudentBalance = studentBalance - total;
+      int vendorBalance = vendorDoc.get('Balance') ?? 0;
+      int updatedVendorBalance = vendorBalance + total;
 
       // Update stocks in vendor's Menu
       List<Map<String, dynamic>> updatedItems = [];
@@ -116,8 +118,13 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
 
       return db.runTransaction((transaction) async {
         // Update customer balance
-        transaction.update(
-            studentSnapshot.docs.first.reference, {'Balance': updatedBalance});
+        transaction.update(studentSnapshot.docs.first.reference,
+            {'Balance': updatedStudentBalance});
+
+        // Update vendor balance
+        transaction.update(db.collection('Menu').doc(currentUid), {
+          'Balance': updatedVendorBalance,
+        });
 
         // Update each item stock in the transaction
         for (var item in updatedItems) {
