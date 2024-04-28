@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:onesync/screens/(Auth)/registered_screen.dart';
 
 class CardSignUp extends StatefulWidget {
   const CardSignUp({Key? key}) : super(key: key);
@@ -168,25 +169,26 @@ class _CardSignUpState extends State<CardSignUp> {
 
   void _saveReferenceNumberToDatabase() {
     String referenceNumber = _referenceNumberController.text;
-    if (referenceNumber.isNotEmpty) {
-      String userID = FirebaseAuth.instance.currentUser!.uid;
-      FirebaseFirestore.instance.collection("Student-Users").doc(userID).set({
-        'UID': referenceNumber,
-      }, SetOptions(merge: true)) // Use merge to avoid overwriting other fields
-          .then((value) {
-        print("Reference Number Added");
-        FirebaseAuth.instance.currentUser!.sendEmailVerification().then((_) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                "Verification email sent. Please verify your email to continue."),
-          ));
-        });
-      }).catchError((error) => print("Failed to add reference number: $error"));
-    } else {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+
+    if (referenceNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a reference number.")),
-      );
+          SnackBar(content: Text("Please enter a reference number.")));
+      return;
     }
+
+    FirebaseFirestore.instance.collection("Student-Users").doc(userID).set({
+      'rfid': referenceNumber,
+    }, SetOptions(merge: true)).then((value) {
+      print("Reference Number Added");
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => RegisteredScreen(),
+      ));
+    }).catchError((error) {
+      print("Failed to add reference number: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save data. Please try again.")));
+    });
   }
 
   @override

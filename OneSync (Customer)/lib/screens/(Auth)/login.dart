@@ -13,13 +13,31 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white, // Adjust the background color as needed
+        elevation: 0, // Removes shadow for a flat design
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SvgPicture.asset(
+                'assets/OneSync_Logo.svg', // Path to your SVG file
+                height: 44, // Set your desired height
+                width: 44, // Set your desired width
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // Center align items
               children: [
                 const Text(
                   'Log In',
@@ -108,36 +126,38 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 buildButton(context, "Sign In With Google"),
                 const SizedBox(height: 20),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      color:
-                          Colors.black.withOpacity(0.7), // Default text color
-                    ),
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: 'Already have an account? ',
-                        style: TextStyle(fontWeight: FontWeight.w400),
+                Center(
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'Inter',
+                        color:
+                            Colors.black.withOpacity(0.7), // Default text color
                       ),
-                      TextSpan(
-                        text: 'Sign in',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: 'Dont have an account? ',
+                          style: TextStyle(fontWeight: FontWeight.w400),
                         ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) =>
-                                    SignUpScreen())); // This should navigate to a different screen if needed
-                          },
-                      ),
-                    ],
+                        TextSpan(
+                          text: 'Sign up',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) =>
+                                      SignUpScreen())); // This should navigate to a different screen if needed
+                            },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                )
               ],
             ),
           ),
@@ -145,52 +165,52 @@ class LoginScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget buildButton(BuildContext context, String label) {
-  return Container(
-    width: 344,
-    height: 44,
-    clipBehavior: Clip.antiAlias,
-    decoration: ShapeDecoration(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(width: 1, color: Color(0xFFD8DADC)),
-        borderRadius: BorderRadius.circular(8),
+  Widget buildButton(BuildContext context, String label) {
+    return Container(
+      width: 344,
+      height: 44,
+      clipBehavior: Clip.antiAlias,
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(width: 1, color: Color(0xFFD8DADC)),
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
-    ),
-    child: TextButton(
-      onPressed: () async {
-        print('Button tapped');
-        await signInWithGoogle();
-      },
-      style: TextButton.styleFrom(
-        foregroundColor: Colors.black.withOpacity(0.8),
-        backgroundColor: Colors.transparent,
-        padding: const EdgeInsets.symmetric(
-            horizontal: 12), // Adjust padding as necessary
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(
-            'assets/Google_Icon.svg',
-            width: 20,
-            height: 20,
-          ),
-          const SizedBox(width: 8), // Space between icon and text
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
+      child: TextButton(
+        onPressed: () async {
+          print('Button tapped');
+          await signInWithGoogle();
+        },
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.black.withOpacity(0.8),
+          backgroundColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(
+              horizontal: 12), // Adjust padding as necessary
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/Google_Icon.svg',
+              width: 20,
+              height: 20,
             ),
-          ),
-        ],
+            const SizedBox(width: 8), // Space between icon and text
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:onesync/navigation.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -54,18 +53,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('History',
-              style: TextStyle(
-                  color: Color(0xFF212121),
-                  fontSize: 28,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w700,
-                  height: 0.05)),
+          title: Text(
+            'Transaction History',
+            style: TextStyle(
+              color: Color(0xFF212121),
+              fontSize: 18,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('Transactions')
-              .where('rfid', isEqualTo: currentRfid) // Filter by RFID
+              .where('rfid', isEqualTo: currentRfid)
               .orderBy('date', descending: true)
               .snapshots(),
           builder: (context, snapshot) {
@@ -108,7 +109,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          '${DateFormat('yyyy-MM-dd').format(orderDate)}',
+                                          DateFormat('yyyy-MM-dd')
+                                              .format(orderDate),
                                           style:
                                               const TextStyle(fontSize: 12.0),
                                         ),
@@ -130,7 +132,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          '${DateFormat('hh:mm a').format(orderDate)}',
+                                          DateFormat('hh:mm a')
+                                              .format(orderDate),
                                           style:
                                               const TextStyle(fontSize: 12.0),
                                         )
