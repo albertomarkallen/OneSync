@@ -3,33 +3,29 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web_auth/flutter_web_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 
-Future<User?> createAccountWithMicrosoftEmail() async {
+Future<void> signInWithGoogle() async {
   try {
-    // Construct the authorization URL
-    const String authorizationBaseUrl = 'https://login.microsoftonline.com';
-    const String clientId = "00bc8e6a-7d9a-4ccc-9c67-2efbab68c243";
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-    const String authorizationUrl =
-        "$authorizationBaseUrl/common/oauth2/v2.0/authorize?client_id=$clientId&response_type=token&redirect_uri=login.microsoftonline.com&response_mode=query&scope=https://graph.microsoft.com/user.read&state=12345&nonce=678910";
-    // Authenticate via a web browser
-    final result = await FlutterWebAuth.authenticate(
-      url: authorizationBaseUrl,
-      callbackUrlScheme: 'login.microsoftonline.com',
-    );
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-    final accessToken = Uri.parse(result).queryParameters['access_token'];
-
-    final OAuthCredential credential =
-        OAuthProvider('microsoft.com').credential(accessToken: accessToken);
-    await FirebaseAuth.instance.signInWithCredential(credential);
-
-    return FirebaseAuth.instance.currentUser;
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      print('User signed in with Google');
+    } else {
+      print('Google sign in aborted by user');
+    }
   } catch (e) {
-    print('Error creating account with Microsoft: $e');
-    return null;
+    print('Error signing in with Google: $e');
   }
 }
 

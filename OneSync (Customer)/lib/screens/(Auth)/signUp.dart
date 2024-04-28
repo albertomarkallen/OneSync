@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:onesync/screens/utils.dart';
@@ -34,7 +33,7 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20), // Spacing before the button
-              buildButton("Sign Up With Microsoft"),
+              buildButton("Sign Up With Google"),
             ],
           ),
         ),
@@ -56,14 +55,10 @@ class SignUpScreen extends StatelessWidget {
       ),
       child: TextButton(
         onPressed: () async {
-          print('Button tapped'); // Initial button tap feedback
-          User? user = await createAccountWithMicrosoftEmail();
-          if (user != null) {
-            print("Signed in as ${user.email}");
-            // You can navigate to another screen or update state here
-          } else {
-            print("Failed to sign in with Microsoft");
-          }
+          print('Button tapped');
+          await signInWithGoogle();
+
+          // Navigate to the home screen
         },
         style: TextButton.styleFrom(
           foregroundColor: Colors.black.withOpacity(0.8),
@@ -76,7 +71,7 @@ class SignUpScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
-              'assets/Microsoft_Icon.svg',
+              'assets/Google_Icon.svg',
               width: 20,
               height: 20,
             ),

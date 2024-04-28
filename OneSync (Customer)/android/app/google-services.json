@@ -1,18 +1,32 @@
 {
   "project_info": {
     "project_number": "1055546308486",
+    "firebase_url": "https://onesync-b234d-default-rtdb.firebaseio.com",
     "project_id": "onesync-b234d",
     "storage_bucket": "onesync-b234d.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1055546308486:android:19qf1b31430a7bec8425e07",
+        "mobilesdk_app_id": "1:1055546308486:android:19f1b31430a7bec8425e07",
         "android_client_info": {
           "package_name": "com.thesis3.onesync"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1055546308486-dirhe391cdsora0q5fomqpakul74j8pk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thesis3.onesync",
+            "certificate_hash": "ccd586f9cacac2ea7daa9cb6f02f7231fd5d694f"
+          }
+        },
+        {
+          "client_id": "1055546308486-57s6b9mcf1dtblf0qe8l724q786scrug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAjzzVsewvrDwvYG9urLB8l2F7cpRqbn5A"
@@ -20,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1055546308486-57s6b9mcf1dtblf0qe8l724q786scrug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1055546308486-gejumvj65fl868l6pjdp2nsv3br919c5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.thesis3.onesync"
+              }
+            }
+          ]
         }
       }
     }

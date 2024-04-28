@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:onesync/screens/utils.dart';
 
 class LoginScreen extends StatelessWidget {
   final TextEditingController _rfidController = TextEditingController();
@@ -35,25 +35,8 @@ class LoginScreen extends StatelessWidget {
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              const SizedBox(height: 30),
-              buildInputField('RFID reference number', _rfidController),
-              const SizedBox(height: 20),
-              buildInputField('Password', _passwordController,
-                  isPassword: true),
-              const SizedBox(height: 20),
-              forgotPassword(),
-              const SizedBox(height: 30),
-              buildLoginButton(context),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                height: 262,
-                child: SvgPicture.asset(
-                  'assets/Ripple.svg',
-                  fit: BoxFit
-                      .cover, // or BoxFit.contain depending on your preference
-                ),
-              ),
+              const SizedBox(height: 20), // Spacing before the button
+              buildButton("Sign In With Google"),
             ],
           ),
         ),
@@ -61,107 +44,49 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget forgotPassword() {
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: GestureDetector(
-        onTap: () {
-          // Add functionality for forgot password
-        },
-        child: const Text(
-          'Forgot Password?',
-          style: TextStyle(
-            color: Color(0xFF0663C7),
-            fontSize: 14,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildInputField(String label, TextEditingController controller,
-      {bool isPassword = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF212121),
-            fontSize: 14,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          decoration: InputDecoration(
-            hintText: isPassword ? 'Enter your password' : 'Enter your email',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0x3FABBED1), width: 1),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildLoginButton(BuildContext context) {
+  Widget buildButton(String label) {
     return Container(
-      width: double.infinity,
+      width: 344,
       height: 44,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0671E0),
-        borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(width: 1, color: Color(0xFFD8DADC)),
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
       child: TextButton(
-        // Add login functionality here
         onPressed: () async {
-          final String rfid = _rfidController.text.trim();
-          final String password = _passwordController.text.trim();
-          // Check if email and password are not empty
-          if (rfid.isNotEmpty && password.isNotEmpty) {
-            DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
-                .collection('Student-Users')
-                .doc(rfid)
-                .get();
-            // Check if user is not null
-            if (documentSnapshot.exists) {
-              Map<String, dynamic> userData =
-                  documentSnapshot.data() as Map<String, dynamic>;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Login successful!')),
-              );
-
-              Navigator.of(context).pushReplacementNamed('/');
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('RFID not found')),
-              );
-            }
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Please enter valid email and password')),
-            );
-          }
+          print('Button tapped');
+          await signInWithGoogle();
         },
-        child: const Text(
-          'Log In',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w500,
-          ),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.black.withOpacity(0.8),
+          backgroundColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(
+              horizontal: 12), // Adjust padding as necessary
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/Google_Icon.svg',
+              width: 20,
+              height: 20,
+            ),
+            const SizedBox(width: 8), // Space between icon and text
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
