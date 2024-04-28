@@ -60,6 +60,55 @@ Future<void> signUpWithGoogle(BuildContext context) async {
   }
 }
 
+Future<User?> signInWithEmailPassword(String email, String password) async {
+  try {
+    final UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return userCredential.user;
+  } catch (e) {
+    print('Error signing in: $e');
+    return null;
+  }
+}
+
+Future<void> signUpWithEmailPassword(
+    BuildContext context, String email, String password) async {
+  try {
+    final UserCredential userCredential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    final User? user = userCredential.user;
+    if (user != null) {
+      // Store user data in Firestore
+      await FirebaseFirestore.instance
+          .collection("Student-Users")
+          .doc(user.uid)
+          .set({'Email': user.email}, SetOptions(merge: true));
+
+      // Navigate or perform other actions after successful signup
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => CardSignUp()),
+      );
+    } else {
+      debugPrint('Failed to create account. User is null.');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to create account, please try again.'),
+      ));
+    }
+  } catch (e) {
+    print('Error creating account with email and password: $e');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Error signing up, please try again.'),
+    ));
+  }
+}
+
 Future<void> signInWithGoogle() async {
   try {
     final GoogleSignIn googleSignIn = GoogleSignIn();
