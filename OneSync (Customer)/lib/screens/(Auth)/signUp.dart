@@ -6,6 +6,23 @@ class SignUpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white, // Adjust the background color as needed
+        elevation: 0, // Removes shadow for a flat design
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SvgPicture.asset(
+                'assets/OneSync_Logo.svg', // Path to your SVG file
+                height: 44, // Set your desired height
+                width: 44, // Set your desired width
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

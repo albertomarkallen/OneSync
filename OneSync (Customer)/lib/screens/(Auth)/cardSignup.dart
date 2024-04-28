@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:onesync/screens/(Auth)/registered_screen.dart';
 
 class CardSignUp extends StatefulWidget {
@@ -17,6 +18,23 @@ class _CardSignUpState extends State<CardSignUp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SvgPicture.asset(
+                'assets/OneSync_Logo.svg', // Path to your SVG file
+                height: 44, // Set your desired height
+                width: 44, // Set your desired width
+              ),
+            ),
+          )
+        ],
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

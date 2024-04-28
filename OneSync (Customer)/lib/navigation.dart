@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/screens/Dashboard/dashboard_screen.dart';
-import 'package:onesync/screens/Order/history_screen.dart';
+import 'package:onesync/screens/Order/transaction_history_screen.dart';
 import 'package:onesync/screens/Profile/profile_screen.dart';
 
 class Navigation extends StatefulWidget {

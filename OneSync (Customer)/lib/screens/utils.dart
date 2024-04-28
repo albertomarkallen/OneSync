@@ -64,6 +64,7 @@ Future<void> signInWithGoogle() async {
   try {
     final GoogleSignIn googleSignIn = GoogleSignIn();
     final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
     if (googleUser != null) {
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -78,9 +79,10 @@ Future<void> signInWithGoogle() async {
       final User? user = userCredential.user;
 
       if (user != null) {
-        print('User signed in with Google: ${user.displayName}');
+        print('User signed in with Google UID: ${user.uid}');
+      } else {
+        print('Failed to sign in. User is null.');
       }
-      print('User signed in with Google');
     } else {
       print('Google sign in aborted by user');
     }
