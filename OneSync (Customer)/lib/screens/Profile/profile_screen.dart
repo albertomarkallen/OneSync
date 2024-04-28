@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
-import 'package:onesync/screens/(Auth)/login.dart';
+import 'package:onesync/screens/(Auth)/signUp.dart';
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) =>
-              LoginScreen(), // Replace LoginScreen with your desired screen
+              SignUpScreen(), // Replace LoginScreen with your desired screen
         ),
       );
     } catch (e) {}

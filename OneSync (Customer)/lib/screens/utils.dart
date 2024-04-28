@@ -1,10 +1,64 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:onesync/screens/(Auth)/cardSignup.dart';
+
+Future<void> signUpWithGoogle(BuildContext context) async {
+  try {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    print(
+        "Google User: $googleUser"); // Debug: Check if user object is received
+
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+      print(
+          "Firebase User: $user"); // Debug: Check if Firebase user object is received
+
+      if (user != null) {
+        String UserID = user.uid;
+        await FirebaseFirestore.instance
+            .collection("Student-Users")
+            .doc(UserID)
+            .set({'Name': user.displayName}, SetOptions(merge: true));
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => CardSignUp()),
+        );
+      } else {
+        debugPrint('Failed to sign in. User is null.');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to sign in, please try again.'),
+        ));
+      }
+    } else {
+      print('Google sign in aborted by user');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Sign in aborted by user.'),
+      ));
+    }
+  } catch (e) {
+    print('Error signing in with Google: $e');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Error signing in, please try again.'),
+    ));
+  }
+}
 
 Future<void> signInWithGoogle() async {
   try {
@@ -19,7 +73,13 @@ Future<void> signInWithGoogle() async {
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        print('User signed in with Google: ${user.displayName}');
+      }
       print('User signed in with Google');
     } else {
       print('Google sign in aborted by user');

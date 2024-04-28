@@ -3,9 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:onesync/screens/utils.dart';
 
 class LoginScreen extends StatelessWidget {
-  final TextEditingController _rfidController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
