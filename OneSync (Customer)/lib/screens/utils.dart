@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:onesync/screens/(Auth)/cardSignup.dart';
+import 'package:onesync/screens/(Auth)/login.dart';
 
 Future<void> signUpWithGoogle(BuildContext context) async {
   try {
@@ -91,9 +92,104 @@ Future<void> signInWithGoogle() async {
   }
 }
 
-Future<void> signOutUser() async {
+Future<void> signInWithEmailAndPassword(
+    String email, String password, void Function(User?) completion) async {
+  try {
+    UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    User? user = userCredential.user;
+
+    // Pass the user to the completion callback
+    completion(user);
+  } catch (e) {
+    print('Error signing in: $e');
+
+    // Check for specific error messages
+    if (e is FirebaseAuthException) {
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        // Handle invalid email or password error
+        print('Invalid email or password');
+        completion(null);
+      } else {
+        // Handle other errors
+        print('Unexpected error: $e');
+        completion(null);
+      }
+    } else {
+      // Handle unexpected errors
+      print('Unexpected error: $e');
+      completion(null);
+    }
+  }
+}
+
+Future<bool> hasInputtedRFID(String uid) async {
+  try {
+    DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+        .instance
+        .collection('Student-Users')
+        .doc(uid)
+        .get();
+
+    // Check if RFID field is empty or null
+    return (snapshot.exists &&
+        snapshot.data() != null &&
+        snapshot.data()!['rfid'] != null &&
+        snapshot.data()!['rfid'] != '');
+  } catch (e) {
+    print('Error checking RFID input: $e');
+    return false; // Return false if error occurs
+  }
+}
+
+Future<void> storeUIDInFirestore(String uid) async {
+  try {
+    // Reference to Firestore collection
+    CollectionReference studentUsers =
+        FirebaseFirestore.instance.collection('Student-Users');
+
+    // Check if the user document already exists
+    DocumentSnapshot<Map<String, dynamic>> snapshot = await studentUsers
+        .doc(uid)
+        .get() as DocumentSnapshot<Map<String, dynamic>>;
+
+    if (!snapshot.exists || snapshot.data() == null) {
+      // If the document doesn't exist, create it with initial values
+      await studentUsers.doc(uid).set({
+        'uid': uid,
+        'rfid': '', // Initialize "rfid" as empty string
+        'balance': 0,
+      });
+      print('New user document created in Firestore');
+    } else {
+      // If the document exists, retain existing RFID value
+      String existingRfid = snapshot.data()!['rfid'] ??
+          ''; // Get existing RFID value, or default to empty string
+      await studentUsers.doc(uid).update({
+        'uid': uid,
+        'rfid': existingRfid, // Retain existing RFID value
+      });
+      print('Existing user document updated in Firestore');
+    }
+
+    print('UID stored in Firestore');
+  } catch (e) {
+    print('Error storing UID in Firestore: $e');
+  }
+}
+
+Future<void> signOutUser(BuildContext context) async {
   try {
     await FirebaseAuth.instance.signOut();
+    // Clear navigation history and prevent going back to logged-in state
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (route) => false, // Prevent going back to previous screen
+    );
   } catch (e) {
     print('Error signing out: $e');
   }
