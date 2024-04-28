@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -176,11 +176,12 @@ class _CardSignUpState extends State<CardSignUp> {
       }, SetOptions(merge: true)) // Use merge to avoid overwriting other fields
           .then((value) {
         print("Reference Number Added");
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    RegisteredScreen())); // Replace 'NextPage' with your actual next page widget
+        FirebaseAuth.instance.currentUser!.sendEmailVerification().then((_) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                "Verification email sent. Please verify your email to continue."),
+          ));
+        });
       }).catchError((error) => print("Failed to add reference number: $error"));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
