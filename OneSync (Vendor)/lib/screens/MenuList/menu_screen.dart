@@ -23,8 +23,6 @@ class _MenuScreenState extends State<MenuScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> displayedItems = [];
 
-  final NumberFormat _currencyFormatter =
-      NumberFormat.currency(locale: 'fil', symbol: '₱');
   @override
   void initState() {
     super.initState();
