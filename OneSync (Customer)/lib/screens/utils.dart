@@ -140,7 +140,7 @@ Future<void> signInWithGoogle() async {
   }
 }
 
-Future<void> signOutUser() async {
+Future<void> signOutUser(BuildContext context) async {
   try {
     await FirebaseAuth.instance.signOut();
   } catch (e) {
