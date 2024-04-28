@@ -1,79 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
-import 'package:onesync/screens/(Auth)/signUp.dart';
+import 'package:onesync/screens/(Auth)/login.dart'; // Import your login screen
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Future<void> _signOut() async {
+  Future<void> _signOut(BuildContext context) async {
     try {
-      await signOutUser();
+      await signOutUser(context); // Pass the context to signOutUser
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) =>
-              SignUpScreen(), // Replace LoginScreen with your desired screen
+              LoginScreen(), // Replace LoginScreen with your desired screen
         ),
       );
-    } catch (e) {}
+    } catch (e) {
+      print('Error signing out: $e');
+    }
   }
 
-  // Widget buildChangePassword(BuildContext context) {
-  //   return GestureDetector(
-  //     onTap: () {
-  //       // Navigate to the update password screen
-  //       Navigator.of(context).push(
-  //         MaterialPageRoute(
-  //           builder: (context) => UpdatePasswordScreen(),
-  //         ),
-  //       );
-  //     },
-  //     child: Container(
-  //       width: 345,
-  //       height: 56,
-  //       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-  //       decoration: ShapeDecoration(
-  //         shape: RoundedRectangleBorder(
-  //           side: BorderSide(width: 0.40, color: Color(0xFF88939E)),
-  //           borderRadius: BorderRadius.circular(8),
-  //         ),
-  //       ),
-  //       child: Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           Text(
-  //             'Password',
-  //             style: TextStyle(
-  //               color: Color(0xFF212121),
-  //               fontSize: 14,
-  //               fontFamily: 'Poppins',
-  //               fontWeight: FontWeight.w500,
-  //               height: 0.10,
-  //             ),
-  //           ),
-  //           SizedBox(
-  //             width: 18,
-  //             height: 18,
-  //             child: SvgPicture.asset(
-  //               'assets/ChangePassword_Icon.svg',
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget buildLogoutButton() {
+  Widget buildLogoutButton(BuildContext context) {
     return InkWell(
-      onTap: _signOut, // Call the _signOut method when the button is tapped
+      onTap: () => _signOut(context), // Call _signOut with context
       child: Container(
         width: 345,
         height: 44,
@@ -83,22 +39,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: const [
-              Text(
-                'Logout',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w500,
-                  height: 0.08,
-                ),
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: const [
+            Text(
+              'Logout',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+                height: 0.08,
               ),
-            ]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -159,9 +116,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             SizedBox(height: 40),
-            // buildChangePassword(context), // Future implementationq
             SizedBox(height: 20),
-            buildLogoutButton(),
+            buildLogoutButton(context), // Pass context to buildLogoutButton
           ],
         ),
       ),

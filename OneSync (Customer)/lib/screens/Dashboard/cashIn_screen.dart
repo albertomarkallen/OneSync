@@ -3,12 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math'; // Import to generate random codes
 
-class CashOutScreen extends StatefulWidget {
+class CashInScreen extends StatefulWidget {
   @override
-  _CashOutScreenState createState() => _CashOutScreenState();
+  _CashInScreenState createState() => _CashInScreenState();
 }
 
-class _CashOutScreenState extends State<CashOutScreen> {
+class _CashInScreenState extends State<CashInScreen> {
   TextEditingController _amountController = TextEditingController();
   bool _showConfirmation = false;
   String _confirmedAmount = '';
@@ -26,7 +26,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cash Out'),
+        title: Text('Cash In'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,7 +35,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Enter Cash Out Amount',
+              'Enter Cash In Amount',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 24,
@@ -84,16 +84,13 @@ class _CashOutScreenState extends State<CashOutScreen> {
       floatingActionButton: _showConfirmation
           ? FloatingActionButton(
               onPressed: () async {
-                print('Cash Out confirmed: $_confirmedAmount');
                 int updatedBalance =
                     await _deductAmountFromBalance(int.parse(_confirmedAmount));
                 if (updatedBalance > 0) {
                   await _storeCashOutTransaction(int.parse(_confirmedAmount));
                 }
-                setState(() {
-                  _showConfirmation = false;
-                });
-                Navigator.pop(context, updatedBalance);
+                Navigator.pop(
+                    context, updatedBalance); // Return the updated balance
               },
               child: Icon(Icons.check),
             )
@@ -106,7 +103,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
       String currentUserId = await getCurrentUserId();
 
       final vendorDoc = await FirebaseFirestore.instance
-          .collection('Menu')
+          .collection('Student-Users')
           .doc(currentUserId)
           .get();
 
@@ -116,11 +113,11 @@ class _CashOutScreenState extends State<CashOutScreen> {
       }
 
       int currentBalance = vendorDoc.get('Balance') ?? 0;
-      int updatedBalance = currentBalance - amount;
+      int updatedBalance = currentBalance + amount;
 
       FirebaseFirestore db = FirebaseFirestore.instance;
 
-      await db.collection('Menu').doc(currentUserId).update({
+      await db.collection('Student-Users').doc(currentUserId).update({
         'Balance': updatedBalance,
       });
 
@@ -131,9 +128,9 @@ class _CashOutScreenState extends State<CashOutScreen> {
 
       return updatedBalance;
     } catch (e) {
-      print('Error deducting amount: $e');
+      print('Error adding amount: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error deducting amount. Please try again.'),
+        content: Text('Error adding amount. Please try again.'),
       ));
       return 0;
     }
@@ -142,22 +139,12 @@ class _CashOutScreenState extends State<CashOutScreen> {
   Future<void> _storeCashOutTransaction(int amount) async {
     try {
       String currentUserId = await getCurrentUserId();
+      String rfid = await _fetchRfid(currentUserId);
 
       FirebaseFirestore db = FirebaseFirestore.instance;
 
       String transactionId =
           _generateRandomTransactionId(); // Generate transaction ID
-
-      // Fetch RFID from Firestore
-      DocumentSnapshot rfidDoc =
-          await db.collection('Student-Users').doc(currentUserId).get();
-
-      if (!rfidDoc.exists) {
-        print('RFID not found for user');
-        return;
-      }
-
-      String rfid = rfidDoc.get('rfid');
 
       Map<String, dynamic> transactionData = {
         'type': 'cashout',
@@ -165,7 +152,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
         'date': FieldValue.serverTimestamp(),
         'currentUid': currentUserId,
         'transactionId': transactionId,
-        'rfid': rfid, // Include RFID in transaction data
+        'rfid': rfid
       };
 
       await db
@@ -185,6 +172,23 @@ class _CashOutScreenState extends State<CashOutScreen> {
       return user.uid;
     } else {
       throw Exception('User not logged in');
+    }
+  }
+
+  Future<String> _fetchRfid(String userId) async {
+    try {
+      final rfidSnapshot = await FirebaseFirestore.instance
+          .collection('Student-Users')
+          .doc(userId)
+          .get();
+
+      if (rfidSnapshot.exists && rfidSnapshot.data() != null) {
+        return rfidSnapshot.data()!['rfid'] ?? '';
+      } else {
+        throw Exception('RFID not found for user');
+      }
+    } catch (e) {
+      throw Exception('Error fetching RFID: $e');
     }
   }
 }

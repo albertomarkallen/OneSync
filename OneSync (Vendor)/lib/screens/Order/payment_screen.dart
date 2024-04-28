@@ -70,15 +70,14 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
 
       QuerySnapshot studentSnapshot = await db
           .collection('Student-Users')
-          .where('UID', isEqualTo: _rfidUid)
+          .where('rfid', isEqualTo: _rfidUid)
           .get();
 
       if (studentSnapshot.docs.isEmpty) {
-        print('Student with UID $_rfidUid not found');
+        print('Student with RFID $_rfidUid not found');
         return;
       }
 
-      String studentName = studentSnapshot.docs.first.get('Name');
       int studentBalance = studentSnapshot.docs.first.get('Balance');
 
       if (studentBalance < total) {
