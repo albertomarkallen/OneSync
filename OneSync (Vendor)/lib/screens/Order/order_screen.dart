@@ -225,14 +225,18 @@ class _OrderScreenState extends State<OrderScreen> {
       Function(MenuItem) addToCart, Function(MenuItem) removeFromCart) {
     int cartQuantity = cart[item.name] ?? 0; // Get the current quantity in cart
 
+    bool isInStock = item.stock > 0;
+
     return InkWell(
-      onTap: () {}, // Add an empty onTap for the entire card
+      onTap: isInStock ? () {} : null, // Disable onTap if out of stock
       child: Container(
         width: 110,
         height: 115,
         clipBehavior: Clip.antiAlias,
         decoration: ShapeDecoration(
-          color: Colors.white,
+          color: isInStock
+              ? Colors.white
+              : Colors.grey.shade300, // Gray out if no stock
           shape: RoundedRectangleBorder(
             side: const BorderSide(
               width: 0.26,
@@ -250,14 +254,19 @@ class _OrderScreenState extends State<OrderScreen> {
                   icon: cartQuantity > 0
                       ? Text(cartQuantity.toString(),
                           style: TextStyle(color: Colors.blue))
-                      : Icon(Icons.add, color: Colors.blue),
-                  onPressed: () {
-                    if (cartQuantity > 0) {
-                      addToCart(item);
-                    } else {
-                      addToCart(item);
-                    }
-                  },
+                      : Icon(Icons.add,
+                          color: isInStock
+                              ? Colors.blue
+                              : Colors.grey), // Change color if no stock
+                  onPressed: isInStock
+                      ? () {
+                          if (cartQuantity > 0) {
+                            addToCart(item);
+                          } else {
+                            addToCart(item);
+                          }
+                        }
+                      : null, // Disable button if no stock
                 ),
               ),
             ),
@@ -270,8 +279,12 @@ class _OrderScreenState extends State<OrderScreen> {
                   children: [
                     IconButton(
                       icon: Icon(Icons.remove),
-                      onPressed: () => removeFromCart(item),
-                      color: Colors.red, // Set color to red
+                      onPressed: isInStock
+                          ? () => removeFromCart(item)
+                          : null, // Disable button if no stock
+                      color: isInStock
+                          ? Colors.red
+                          : Colors.grey, // Change color if no stock
                     ),
                   ],
                 ),
@@ -282,6 +295,12 @@ class _OrderScreenState extends State<OrderScreen> {
                     image: DecorationImage(
                       image: NetworkImage(item.imageUrl),
                       fit: BoxFit.fill,
+                      colorFilter: isInStock
+                          ? null
+                          : ColorFilter.mode(
+                              Colors.grey,
+                              BlendMode
+                                  .saturation), // Apply gray scale if no stock
                     ),
                   ),
                 ),
@@ -294,7 +313,7 @@ class _OrderScreenState extends State<OrderScreen> {
                             horizontal: 8, vertical: 2.61),
                         child: Text(
                           item.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Color(0xFF212121),
                             fontSize: 10,
                             fontFamily: 'Poppins',
@@ -311,8 +330,10 @@ class _OrderScreenState extends State<OrderScreen> {
                                 left: 8), // Aligns with the name above
                             child: Text(
                               '${item.stock} left',
-                              style: const TextStyle(
-                                color: Color(0xFF717171),
+                              style: TextStyle(
+                                color: isInStock
+                                    ? Color(0xFF717171)
+                                    : Colors.grey, // Change color if no stock
                                 fontSize: 9,
                                 fontFamily: 'Poppins',
                                 fontWeight: FontWeight.w400,
@@ -323,9 +344,10 @@ class _OrderScreenState extends State<OrderScreen> {
                             padding: const EdgeInsets.only(right: 8),
                             child: Text(
                               '₱ ${item.price.toStringAsFixed(2)}', // Format price to two decimal places
-                              style: const TextStyle(
-                                color: Color(
-                                    0xFF0663C7), // Consider defining this color in your theme settings
+                              style: TextStyle(
+                                color: isInStock
+                                    ? Color(0xFF0663C7)
+                                    : Colors.grey, // Change color if no stock
                                 fontSize: 10,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
