@@ -148,12 +148,24 @@ class _CashOutScreenState extends State<CashOutScreen> {
       String transactionId =
           _generateRandomTransactionId(); // Generate transaction ID
 
+      // Fetch RFID from Firestore
+      DocumentSnapshot rfidDoc =
+          await db.collection('Student-Users').doc(currentUserId).get();
+
+      if (!rfidDoc.exists) {
+        print('RFID not found for user');
+        return;
+      }
+
+      String rfid = rfidDoc.get('rfid');
+
       Map<String, dynamic> transactionData = {
         'type': 'cashout',
         'totalPrice': amount,
         'date': FieldValue.serverTimestamp(),
         'currentUid': currentUserId,
         'transactionId': transactionId,
+        'rfid': rfid, // Include RFID in transaction data
       };
 
       await db
