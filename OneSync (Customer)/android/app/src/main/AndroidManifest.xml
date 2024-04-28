@@ -32,9 +32,6 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
                <data
-        android:scheme="OneSync.Login"
-        android:host="login.microsoftonline.com"
-        android:path="/c83f55a7-7fe8-4934-b759-09926430aef0/oauth2/v2.0/authorize"
         />
             </intent-filter>
         </activity>

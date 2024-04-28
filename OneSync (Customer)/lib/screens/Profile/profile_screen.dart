@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/(Auth)/signUp.dart';
-import 'package:onesync/screens/Profile/update_password.dart';
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -17,8 +15,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _signOut() async {
     try {
-      await signOutUser(); // Utilizing the provided signOutUser function
-      // Navigate to the login screen or any other screen after sign-out
+      await signOutUser();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) =>
@@ -28,51 +25,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {}
   }
 
-  Widget buildChangePassword(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Navigate to the update password screen
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => UpdatePasswordScreen(),
-          ),
-        );
-      },
-      child: Container(
-        width: 345,
-        height: 56,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: ShapeDecoration(
-          shape: RoundedRectangleBorder(
-            side: BorderSide(width: 0.40, color: Color(0xFF88939E)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Password',
-              style: TextStyle(
-                color: Color(0xFF212121),
-                fontSize: 14,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w500,
-                height: 0.10,
-              ),
-            ),
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: SvgPicture.asset(
-                'assets/ChangePassword_Icon.svg',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget buildChangePassword(BuildContext context) {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       // Navigate to the update password screen
+  //       Navigator.of(context).push(
+  //         MaterialPageRoute(
+  //           builder: (context) => UpdatePasswordScreen(),
+  //         ),
+  //       );
+  //     },
+  //     child: Container(
+  //       width: 345,
+  //       height: 56,
+  //       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+  //       decoration: ShapeDecoration(
+  //         shape: RoundedRectangleBorder(
+  //           side: BorderSide(width: 0.40, color: Color(0xFF88939E)),
+  //           borderRadius: BorderRadius.circular(8),
+  //         ),
+  //       ),
+  //       child: Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Text(
+  //             'Password',
+  //             style: TextStyle(
+  //               color: Color(0xFF212121),
+  //               fontSize: 14,
+  //               fontFamily: 'Poppins',
+  //               fontWeight: FontWeight.w500,
+  //               height: 0.10,
+  //             ),
+  //           ),
+  //           SizedBox(
+  //             width: 18,
+  //             height: 18,
+  //             child: SvgPicture.asset(
+  //               'assets/ChangePassword_Icon.svg',
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget buildLogoutButton() {
     return InkWell(
@@ -162,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             SizedBox(height: 40),
-            buildChangePassword(context),
+            // buildChangePassword(context), // Future implementationq
             SizedBox(height: 20),
             buildLogoutButton(),
           ],

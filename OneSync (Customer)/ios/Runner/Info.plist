@@ -34,80 +34,40 @@
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>NSPhotoLibraryAddUsageDescription</string>
 	<string>Main</string>
+		<key>CLIENT_ID</key>
+	<string>1055546308486-gejumvj65fl868l6pjdp2nsv3br919c5.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1055546308486-gejumvj65fl868l6pjdp2nsv3br919c5</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>1055546308486-dirhe391cdsora0q5fomqpakul74j8pk.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDPA0c4zEcUrhvjUo0dMCaSxBn-Dths73k</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1055546308486</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.thesis3.onesync</string>
+	<key>PROJECT_ID</key>
+	<string>onesync-b234d</string>
+	<key>STORAGE_BUCKET</key>
+	<string>onesync-b234d.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1055546308486:ios:2230c43233fab82a425e07</string>
+	<key>DATABASE_URL</key>
+	<string>https://onesync-b234d-default-rtdb.firebaseio.com</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>Onesync</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>onesync</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<key>NSPhotoLibraryUsageDescription</key>
-    <string>Privacy - Photo Library Usage Description</string>
-    <key>NSMotionUsageDescription</key>
-    <string>Motion usage description</string>
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>NSPhotoLibraryAddUsageDescription</string>
-	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleTypeRole</key>
-        <string>Editor</string>
-        <key>CFBundleURLName</key>
-        <string>com.yourcompany.yourapp</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-            <string>myflutterscheme</string>
-        </array>
-    </dict>
-</array>
-
-	<string>Our application needs access to your photo gallery to select images.</string>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-</dict>
-</plist>
-
 	<string>Our application needs access to your photo gallery to select images.</string>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

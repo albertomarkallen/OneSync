@@ -1,7 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:onesync/screens/utils.dart';
+import 'package:onesync/screens/utils.dart'; // Ensure that signUpWithGoogle is defined here or import correctly
 
 class SignUpScreen extends StatelessWidget {
   @override
@@ -34,7 +33,7 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20), // Spacing before the button
-              buildButton("Sign Up With Microsoft"),
+              buildButton(context, "Sign Up With Google"),
             ],
           ),
         ),
@@ -42,7 +41,7 @@ class SignUpScreen extends StatelessWidget {
     );
   }
 
-  Widget buildButton(String label) {
+  Widget buildButton(BuildContext context, String label) {
     return Container(
       width: 344,
       height: 44,
@@ -50,33 +49,33 @@ class SignUpScreen extends StatelessWidget {
       decoration: ShapeDecoration(
         color: Colors.white,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(width: 1, color: Color(0xFFD8DADC)),
+          side: BorderSide(width: 1, color: Color(0xFFD8DADC)),
           borderRadius: BorderRadius.circular(8),
         ),
       ),
       child: TextButton(
         onPressed: () async {
-          print('Button tapped'); // Initial button tap feedback
-          User? user = await createAccountWithMicrosoftEmail();
-          if (user != null) {
-            print("Signed in as ${user.email}");
-            // You can navigate to another screen or update state here
-          } else {
-            print("Failed to sign in with Microsoft");
+          print('Button tapped');
+          try {
+            await signUpWithGoogle(
+                context); // Assuming signUpWithGoogle is defined and works correctly
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to sign in: $e')),
+            );
           }
         },
         style: TextButton.styleFrom(
           foregroundColor: Colors.black.withOpacity(0.8),
           backgroundColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(
-              horizontal: 12), // Adjust padding as necessary
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
-              'assets/Microsoft_Icon.svg',
+              'assets/Google_Icon.svg',
               width: 20,
               height: 20,
             ),

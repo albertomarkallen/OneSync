@@ -1,35 +1,91 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web_auth/flutter_web_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:onesync/screens/(Auth)/cardSignup.dart';
 
-Future<User?> createAccountWithMicrosoftEmail() async {
+Future<void> signUpWithGoogle(BuildContext context) async {
   try {
-    // Construct the authorization URL
-    const String authorizationBaseUrl = 'https://login.microsoftonline.com';
-    const String clientId = "00bc8e6a-7d9a-4ccc-9c67-2efbab68c243";
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    print(
+        "Google User: $googleUser"); // Debug: Check if user object is received
 
-    const String authorizationUrl =
-        "$authorizationBaseUrl/common/oauth2/v2.0/authorize?client_id=$clientId&response_type=token&redirect_uri=login.microsoftonline.com&response_mode=query&scope=https://graph.microsoft.com/user.read&state=12345&nonce=678910";
-    // Authenticate via a web browser
-    final result = await FlutterWebAuth.authenticate(
-      url: authorizationBaseUrl,
-      callbackUrlScheme: 'login.microsoftonline.com',
-    );
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-    final accessToken = Uri.parse(result).queryParameters['access_token'];
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-    final OAuthCredential credential =
-        OAuthProvider('microsoft.com').credential(accessToken: accessToken);
-    await FirebaseAuth.instance.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+      print(
+          "Firebase User: $user"); // Debug: Check if Firebase user object is received
 
-    return FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String UserID = user.uid;
+        await FirebaseFirestore.instance
+            .collection("Student-Users")
+            .doc(UserID)
+            .set({'Name': user.displayName}, SetOptions(merge: true));
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => CardSignUp()),
+        );
+      } else {
+        debugPrint('Failed to sign in. User is null.');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to sign in, please try again.'),
+        ));
+      }
+    } else {
+      print('Google sign in aborted by user');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Sign in aborted by user.'),
+      ));
+    }
   } catch (e) {
-    print('Error creating account with Microsoft: $e');
-    return null;
+    print('Error signing in with Google: $e');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Error signing in, please try again.'),
+    ));
+  }
+}
+
+Future<void> signInWithGoogle() async {
+  try {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        print('User signed in with Google: ${user.displayName}');
+      }
+      print('User signed in with Google');
+    } else {
+      print('Google sign in aborted by user');
+    }
+  } catch (e) {
+    print('Error signing in with Google: $e');
   }
 }
 
