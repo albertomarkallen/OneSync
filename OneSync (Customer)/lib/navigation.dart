@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:onesync/screens/Dashboard/dashboard_screen.dart';
-import 'package:onesync/screens/Dashboard/transaction_history_screen.dart';
+import 'package:onesync/screens/Dashboard/history_screen.dart';
 import 'package:onesync/screens/Profile/profile_screen.dart';
 
 class Navigation extends StatefulWidget {
@@ -18,13 +18,11 @@ class _NavigationState extends State<Navigation> {
       _selectedIndex = index;
     });
 
-    Navigator.of(context).push(MaterialPageRoute(
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (context) {
         if (index == 0) {
-          return const HistoryScreen();
-        } else if (index == 1) {
           return const DashboardScreen();
-        } else if (index == 2) {
+        } else if (index == 1) {
           return const ProfileScreen();
         }
         return const DashboardScreen();
@@ -36,10 +34,6 @@ class _NavigationState extends State<Navigation> {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.history),
-          label: 'History',
-        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
           label: 'Dashboard',
