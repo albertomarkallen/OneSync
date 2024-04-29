@@ -6,7 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:onesync/screens/(Auth)/cardSignup.dart';
+import 'package:onesync/screens/(Auth)/input_rfid_screen.dart';
 import 'package:onesync/screens/(Auth)/login.dart';
 
 Future<void> signUpWithGoogle(BuildContext context) async {
@@ -39,7 +39,7 @@ Future<void> signUpWithGoogle(BuildContext context) async {
             .set({'Name': user.displayName}, SetOptions(merge: true));
 
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => CardSignUp()),
+          MaterialPageRoute(builder: (context) => InputRfidScreen()),
         );
       } else {
         debugPrint('Failed to sign in. User is null.');

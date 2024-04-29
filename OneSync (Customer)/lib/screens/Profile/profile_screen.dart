@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
-import 'package:onesync/screens/(Auth)/login.dart'; // Import your login screen
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -82,6 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String storeName =
         '$_firstName $_lastName'; // Concatenate first name and last name
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'Profile',
@@ -91,6 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
             height: 0.05,
+            backgroundColor: Colors.white,
           ),
         ),
       ),

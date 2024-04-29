@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:math'; // Import to generate random codes
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:math'; // Import to generate random codes
+import 'package:flutter/material.dart';
 
 class CashInScreen extends StatefulWidget {
   @override
@@ -25,7 +26,9 @@ class _CashInScreenState extends State<CashInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text('Cash In'),
       ),
       body: Padding(
@@ -44,21 +47,50 @@ class _CashInScreenState extends State<CashInScreen> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 20),
-            TextFormField(
-              controller: _amountController,
-              decoration: InputDecoration(
-                labelText: 'Amount',
-                prefixIcon: Icon(Icons.monetization_on),
-                border: OutlineInputBorder(),
+            SizedBox(
+              width: 345,
+              height: 45,
+              child: TextFormField(
+                controller: _amountController,
+                decoration: InputDecoration(
+                  labelText: "Amount",
+                  labelStyle: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF4D4D4D),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Color(0xFFABBED1)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide:
+                        BorderSide(color: Colors.red), // Red border for error
+                  ),
+                  errorStyle: TextStyle(
+                    color: Colors
+                        .red, // Set the text color of the error message to red
+                    fontSize: 14, // Set the font size of the error message
+                    fontFamily:
+                        'Inter', // Set the font family of the error message
+                    fontWeight: FontWeight
+                        .w400, // Set the font weight of the error message
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an amount';
+                  }
+                  // Add additional validation if needed
+                  return null;
+                },
               ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter an amount';
-                }
-                // Add additional validation if needed
-                return null;
-              },
             ),
             SizedBox(height: 20),
             ElevatedButton(
@@ -69,7 +101,10 @@ class _CashInScreenState extends State<CashInScreen> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Background color
+                backgroundColor: Color(0xFF0671E0), // Background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // Rounded corners
+                ),
               ),
               child: Text(
                 'Cash Out',

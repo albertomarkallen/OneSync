@@ -15,20 +15,14 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 1;
   int balance = 0; // Initialize balance variable
   bool _isLoading = false;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  String? currentUid = FirebaseAuth.instance.currentUser?.uid;
 
   Widget buildBalanceDisplay() {
     return Container(
-      width: 343,
-      height: 123,
+      width: 345,
+      height: 155,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -150,8 +144,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget buildCombinedShapesContainer() {
     return Center(
       child: SizedBox(
-        width: 343,
-        height: 123,
+        width: 345,
+        height: 155,
         child: Stack(
           children: [
             buildBalanceDisplay(),
@@ -164,27 +158,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:
+          Colors.white, // Set background color of Scaffold to white
       appBar: AppBar(
-        title: Text(
-          'OneSync POS',
-          style: TextStyle(
-            color: Color(0xFF212121),
-            fontSize: 28,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            height: 0.05,
+        backgroundColor:
+            Colors.white, // Set background color of AppBar to white
+        title: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          child: StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('Student-Users')
+                .doc(currentUid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Text(
+                    'Loading...'); // Placeholder text while data is loading
+              }
+
+              var data = snapshot.data!.data() as Map<String, dynamic>;
+              var firstName = data['firstName'];
+
+              return Text(
+                'Hello, $firstName!',
+                style: TextStyle(
+                  color: Color(0xFF212121),
+                  fontSize: 28,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  height: 0.05,
+                ),
+              );
+            },
           ),
         ),
       ),
-      body: Column(
-        children: [
-          buildCombinedShapesContainer(),
-          const SizedBox(height: 14),
-          Expanded(
-            // Use the TransactionHistoryScreen widget here
-            child: HistoryScreen(),
-          ),
-        ],
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: 16.0), // Adjust the value as needed
+        child: Column(
+          children: [
+            buildCombinedShapesContainer(),
+            const SizedBox(height: 6),
+            Expanded(
+              // Use the TransactionHistoryScreen widget here
+              child: HistoryScreen(
+                showBottomNav: false,
+                showActionButton: true,
+                showSearchBar: false,
+                showFilterCategory: false,
+              ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: Navigation(),
     );

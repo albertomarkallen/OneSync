@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart'; // Ensure this package is added if using SVG images
-import 'package:onesync/screens/Dashboard/dashboard_screen.dart';
+import 'package:onesync/screens/(Auth)/registered_screen.dart';
 
 class InputRfidScreen extends StatefulWidget {
   const InputRfidScreen({Key? key}) : super(key: key);
@@ -20,6 +20,7 @@ class _InputRfidScreenState extends State<InputRfidScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -28,9 +29,9 @@ class _InputRfidScreenState extends State<InputRfidScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: SvgPicture.asset(
-              'assets/OneSync_Logo.svg', // Path to your SVG file
-              height: 44, // Set your desired height
-              width: 44, // Set your desired width
+              'assets/OneSync_Logo.svg',
+              height: 44,
+              width: 44,
             ),
           )
         ],
@@ -40,72 +41,153 @@ class _InputRfidScreenState extends State<InputRfidScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextFormField(
-                controller: _firstNameController,
-                decoration: InputDecoration(
-                  labelText: 'First Name',
-                  labelStyle: TextStyle(
-                    fontFamily: 'Inter', // Adjusted to use the Inter font
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF4D4D4D),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFABBED1)),
-                  ),
+              const Text(
+                'Your Card',
+                style: TextStyle(
+                  color: Color(0xFF212121),
+                  fontSize: 32,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w700,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your first name';
-                  }
-                  return null;
-                },
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Enter your reference number printed on your OneSync card.',
+                style: TextStyle(
+                  color: Color(0xFF4D4D4D),
+                  fontSize: 16,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 30),
+              SizedBox(
+                width: 345,
+                height: 55,
+                child: TextFormField(
+                  controller: _firstNameController,
+                  decoration: InputDecoration(
+                    labelText: "First Name",
+                    labelStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF4D4D4D),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color(0xFFABBED1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.blue),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide:
+                          BorderSide(color: Colors.red), // Red border for error
+                    ),
+                    errorStyle: TextStyle(
+                      color: Colors
+                          .red, // Set the text color of the error message to red
+                      fontSize: 14, // Set the font size of the error message
+                      fontFamily:
+                          'Inter', // Set the font family of the error message
+                      fontWeight: FontWeight
+                          .w400, // Set the font weight of the error message
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your first name';
+                    }
+                    return null;
+                  },
+                ),
               ),
               SizedBox(height: 20),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: InputDecoration(
-                  labelText: 'Last Name',
-                  labelStyle: TextStyle(
-                    fontFamily: 'Inter', // Adjusted to use the Inter font
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF4D4D4D),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFABBED1)),
+              SizedBox(
+                width: 345,
+                height: 55,
+                child: TextFormField(
+                  controller: _lastNameController,
+                  decoration: InputDecoration(
+                    labelText: "Last Name",
+                    labelStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF4D4D4D),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color(0xFFABBED1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.blue),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide:
+                          BorderSide(color: Colors.red), // Red border for error
+                    ),
+                    errorStyle: TextStyle(
+                      color: Colors
+                          .red, // Set the text color of the error message to red
+                      fontSize: 14, // Set the font size of the error message
+                      fontFamily:
+                          'Inter', // Set the font family of the error message
+                      fontWeight: FontWeight
+                          .w400, // Set the font weight of the error message
+                    ),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your last name';
-                  }
-                  return null;
-                },
               ),
               SizedBox(height: 20),
-              TextFormField(
-                controller: _rfidController,
-                decoration: InputDecoration(
-                  labelText: 'Enter your reference number',
-                  labelStyle: TextStyle(
-                    fontFamily: 'Inter', // Adjusted to use the Inter font
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF4D4D4D),
+              SizedBox(
+                width: 345,
+                height: 45,
+                child: TextFormField(
+                  controller: _rfidController,
+                  decoration: InputDecoration(
+                    labelText: "Enter your Reference Number",
+                    labelStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF4D4D4D),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color(0xFFABBED1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.blue),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide:
+                          BorderSide(color: Colors.red), // Red border for error
+                    ),
+                    errorStyle: TextStyle(
+                      color: Colors
+                          .red, // Set the text color of the error message to red
+                      fontSize: 14, // Set the font size of the error message
+                      fontFamily:
+                          'Inter', // Set the font family of the error message
+                      fontWeight: FontWeight
+                          .w400, // Set the font weight of the error message
+                    ),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFABBED1)),
-                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter RFID';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter RFID';
-                  }
-                  return null;
-                },
               ),
               SizedBox(height: 20),
               Container(
@@ -160,7 +242,7 @@ class _InputRfidScreenState extends State<InputRfidScreen> {
           'lastName': lastName,
         }, SetOptions(merge: true));
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => DashboardScreen()),
+          MaterialPageRoute(builder: (context) => RegisteredScreen()),
         );
       } else {
         print('Error: Current user not found');

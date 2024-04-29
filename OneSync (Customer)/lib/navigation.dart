@@ -21,8 +21,10 @@ class _NavigationState extends State<Navigation> {
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (context) {
         if (index == 0) {
-          return const DashboardScreen();
+          return const HistoryScreen();
         } else if (index == 1) {
+          return const DashboardScreen();
+        } else if (index == 2) {
           return const ProfileScreen();
         }
         return const DashboardScreen();
@@ -33,7 +35,12 @@ class _NavigationState extends State<Navigation> {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
+      backgroundColor: Colors.white,
       items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.history),
+          label: 'History',
+        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
           label: 'Dashboard',

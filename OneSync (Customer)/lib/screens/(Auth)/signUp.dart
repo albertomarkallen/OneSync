@@ -1,10 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:onesync/screens/(Auth)/input_rfid_screen.dart';
 import 'package:onesync/screens/(Auth)/login.dart';
-import 'package:onesync/screens/utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -22,6 +21,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -30,10 +30,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             padding: const EdgeInsets.only(right: 16.0),
             child: Align(
               alignment: Alignment.centerRight,
-              child: SvgPicture.asset(
-                'assets/OneSync_Logo.svg',
+              child: Container(
+                color: Colors.white, // Sets the background color for the SVG
                 height: 44,
                 width: 44,
+                child: SvgPicture.asset(
+                  'assets/OneSync_Logo.svg',
+                ),
               ),
             ),
           ),
@@ -79,7 +82,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       isPassword: true),
                   const SizedBox(height: 20),
                   buildButton(context, "Sign Up"),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 30),
                   buildLoginLink(context),
                 ],
               ),
@@ -135,36 +138,61 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Widget buildTextField(String label, TextEditingController controller,
       {bool isPassword = false}) {
-    return TextFormField(
-      controller: controller,
-      obscureText: isPassword,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter $label';
-        } else if (label == 'Email' && !value.contains('@')) {
-          return 'Please enter a valid email';
-        } else if (label == 'Confirm Password' &&
-            value != passwordController.text) {
-          return 'Passwords do not match';
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
+    return SizedBox(
+        width: 345,
+        height: 55,
+        child: TextFormField(
+          controller: controller,
+          obscureText: isPassword,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter $label';
+            } else if (label == 'Email' && !value.contains('@')) {
+              return 'Please enter a valid email';
+            } else if (label == 'Confirm Password' &&
+                value != passwordController.text) {
+              return 'Passwords do not match';
+            }
+            return null;
+          },
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF4D4D4D),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Color(0xFFABBED1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.blue),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.red), // Red border for error
+            ),
+            errorStyle: TextStyle(
+              color:
+                  Colors.red, // Set the text color of the error message to red
+              fontSize: 14, // Set the font size of the error message
+              fontFamily: 'Inter', // Set the font family of the error message
+              fontWeight:
+                  FontWeight.w400, // Set the font weight of the error message
+            ),
+          ),
+        ));
   }
 
   Widget buildButton(BuildContext context, String label) {
     return Container(
-      width: 344,
-      height: 44,
+      width: 345,
+      height: 45,
       clipBehavior: Clip.antiAlias,
       decoration: ShapeDecoration(
-        color: Colors.white,
+        color: Color(0xFF0671E0),
         shape: RoundedRectangleBorder(
           side: BorderSide(width: 1, color: Color(0xFFD8DADC)),
           borderRadius: BorderRadius.circular(8),
@@ -186,6 +214,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 16,
+            color: Colors.white,
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w600,
           ),
@@ -203,33 +232,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         );
       },
-      child: Text(
-        "Already have an account? Log in",
-        style: TextStyle(
-          color: Colors.blue,
-          decoration: TextDecoration.underline,
-        ),
-      ),
-    );
-  }
-
-  void showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Account Created Successfully'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Dismiss the dialog
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => LoginScreen()),
-              );
-            },
-            child: const Text('Okay'),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Already have an account? ",
+            style: TextStyle(
+              color: Colors.black.withOpacity(0.69),
+            ),
+          ),
+          Text(
+            "Log in",
+            style: TextStyle(
+              color: Colors.black.withOpacity(0.69),
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+void showSuccessDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Account Created Successfully'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Dismiss the dialog
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+            );
+          },
+          child: const Text('Okay'),
+        ),
+      ],
+    ),
+  );
 }
