@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Dashboard/cashIn_screen.dart';
+import 'package:onesync/screens/Dashboard/history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
@@ -27,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget buildBalanceDisplay() {
     return Container(
       width: 343,
-      height: 150,
+      height: 123,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -45,8 +46,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Opacity(
               opacity: 0.30,
               child: Container(
-                width: 343,
-                height: 300,
+                width: 269,
+                height: 269,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(width: 1, color: Color(0xFF0671E0)),
@@ -149,8 +150,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget buildCombinedShapesContainer() {
     return Center(
       child: SizedBox(
-        width: 345,
-        height: 155,
+        width: 343,
+        height: 123,
         child: Stack(
           children: [
             buildBalanceDisplay(),
@@ -165,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Hello, Customer!',
+          'OneSync POS',
           style: TextStyle(
             color: Color(0xFF212121),
             fontSize: 28,
@@ -179,6 +180,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           buildCombinedShapesContainer(),
           const SizedBox(height: 14),
+          Expanded(
+            // Use the TransactionHistoryScreen widget here
+            child: HistoryScreen(),
+          ),
         ],
       ),
       bottomNavigationBar: Navigation(),

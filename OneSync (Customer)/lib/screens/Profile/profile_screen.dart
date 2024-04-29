@@ -1,35 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/(Auth)/login.dart'; // Import your login screen
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    Key? key,
-  }) : super(key: key);
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Future<void> _signOut(BuildContext context) async {
+  late String _firstName = '';
+  late String _lastName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    getUserInfo();
+  }
+
+  Future<void> getUserInfo() async {
     try {
-      await signOutUser(context); // Pass the context to signOutUser
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) =>
-              LoginScreen(), // Replace LoginScreen with your desired screen
-        ),
-      );
+      String? uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+            .collection('Student-Users')
+            .doc(uid)
+            .get();
+        Map<String, dynamic>? userData = userSnapshot.data()
+            as Map<String, dynamic>?; // Cast to Map<String, dynamic>?
+        if (userData != null) {
+          setState(() {
+            _firstName = userData['firstName'];
+            _lastName = userData['lastName'];
+          });
+        }
+      }
     } catch (e) {
-      print('Error signing out: $e');
+      print('Error fetching user info: $e');
     }
   }
 
   Widget buildLogoutButton(BuildContext context) {
     return InkWell(
-      onTap: () => _signOut(context), // Call _signOut with context
+      onTap: () => signOutUser(context),
       child: Container(
         width: 345,
         height: 44,
@@ -62,6 +79,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String storeName =
+        '$_firstName $_lastName'; // Concatenate first name and last name
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -93,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 40),
             Text(
-              'OneSync Store',
+              'OneSync POS',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF212121),
@@ -105,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 30),
             Text(
-              'Store Name',
+              storeName, // Display the concatenated store name
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF717171),
@@ -117,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 40),
             SizedBox(height: 20),
-            buildLogoutButton(context), // Pass context to buildLogoutButton
+            buildLogoutButton(context),
           ],
         ),
       ),
