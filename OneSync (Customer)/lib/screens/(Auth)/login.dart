@@ -1,43 +1,28 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 import 'package:onesync/screens/(Auth)/signUp.dart';
-import 'package:onesync/screens/utils.dart'; // Make sure this file correctly implements signInWithGoogle and signUpWithEmailPassword
+import 'package:onesync/screens/utils.dart'; // Ensure that signInWithEmailAndPassword is defined here or imported correctly
+import 'package:onesync/screens/Dashboard/dashboard_screen.dart'; // Import your dashboard screen
 
 class LoginScreen extends StatelessWidget {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(); // Add this line
 
-  LoginScreen({super.key});
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white, // Adjust the background color as needed
-        elevation: 0, // Removes shadow for a flat design
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: SvgPicture.asset(
-                'assets/OneSync_Logo.svg', // Path to your SVG file
-                height: 44, // Set your desired height
-                width: 44, // Set your desired width
-              ),
-            ),
-          ),
-        ],
-      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SingleChildScrollView(
+          child: Form(
+            // Wrap the form with the form key
+            key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start, // Center align items
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Log In',
@@ -59,105 +44,14 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                  ),
-                ),
+                buildTextField("Email", emailController),
+                const SizedBox(height: 10),
+                buildTextField("Password", passwordController,
+                    isPassword: true),
                 const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    final String email = _emailController.text.trim();
-                    final String password = _passwordController.text.trim();
-                    if (email.isNotEmpty && password.isNotEmpty) {
-                      try {
-                        await signUpWithEmailPassword(context, email, password);
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content:
-                                  Text('Failed to create account. Error: $e')),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('Please enter valid email and password')),
-                      );
-                    }
-                  },
-                  style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(Color(0xFF0671E0)),
-                    padding: MaterialStateProperty.all(
-                        EdgeInsets.symmetric(horizontal: 32, vertical: 12)),
-                    elevation: MaterialStateProperty.all(
-                        0), // Removing default elevation
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    minimumSize: MaterialStateProperty.all(
-                        Size(345, 44)), // Setting the size
-                  ),
-                  child: Text(
-                    'Log In',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                buildButton(context, "Sign In With Google"),
-                const SizedBox(height: 20),
-                Center(
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        color:
-                            Colors.black.withOpacity(0.7), // Default text color
-                      ),
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: 'Dont have an account? ',
-                          style: TextStyle(fontWeight: FontWeight.w400),
-                        ),
-                        TextSpan(
-                          text: 'Sign up',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) =>
-                                      SignUpScreen())); // This should navigate to a different screen if needed
-                            },
-                        ),
-                      ],
-                    ),
-                  ),
-                )
+                buildButton("Log In", context),
+                const SizedBox(height: 10),
+                buildSignUpLink(context),
               ],
             ),
           ),
@@ -166,7 +60,29 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget buildButton(BuildContext context, String label) {
+  Widget buildTextField(String label, TextEditingController controller,
+      {bool isPassword = false}) {
+    return TextFormField(
+      // Changed to TextFormField
+      controller: controller,
+      obscureText: isPassword,
+      validator: (value) {
+        // Add validator
+        if (value == null || value.isEmpty) {
+          return 'Please enter $label';
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  Widget buildButton(String label, BuildContext context) {
     return Container(
       width: 344,
       height: 44,
@@ -180,35 +96,64 @@ class LoginScreen extends StatelessWidget {
       ),
       child: TextButton(
         onPressed: () async {
-          print('Button tapped');
-          await signInWithGoogle();
+          if (_formKey.currentState!.validate()) {
+            // Validate the form
+            // Call signInWithEmailAndPassword and handle redirection
+            await signInWithEmailAndPassword(
+              emailController.text,
+              passwordController.text,
+              (User? user) {
+                if (user != null) {
+                  // Redirect to dashboard upon successful login
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => DashboardScreen()),
+                  );
+                } else {
+                  // Handle login failure
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Invalid email or password.'),
+                    ),
+                  );
+                }
+              },
+            );
+          }
         },
         style: TextButton.styleFrom(
           foregroundColor: Colors.black.withOpacity(0.8),
           backgroundColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(
-              horizontal: 12), // Adjust padding as necessary
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/Google_Icon.svg',
-              width: 20,
-              height: 20,
-            ),
-            const SizedBox(width: 8), // Space between icon and text
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSignUpLink(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => SignUpScreen(),
+          ),
+        );
+      },
+      child: Text(
+        "Don't have an account? Sign up",
+        style: TextStyle(
+          color: Colors.blue,
+          decoration: TextDecoration.underline,
         ),
       ),
     );
