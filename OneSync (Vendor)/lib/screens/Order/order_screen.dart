@@ -204,19 +204,22 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Widget _buildMenuGrid() {
     return Expanded(
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 6.0,
-          mainAxisSpacing: 8.0,
-          childAspectRatio: 0.88,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10.0), // Add bottom padding here
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16.0),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 6.0,
+            mainAxisSpacing: 8.0,
+            childAspectRatio: 0.88,
+          ),
+          itemCount: displayedItems.length,
+          itemBuilder: (context, index) {
+            return _menuList(
+                context, displayedItems[index], _addToCart, _removeFromCart);
+          },
         ),
-        itemCount: displayedItems.length,
-        itemBuilder: (context, index) {
-          return _menuList(
-              context, displayedItems[index], _addToCart, _removeFromCart);
-        },
       ),
     );
   }

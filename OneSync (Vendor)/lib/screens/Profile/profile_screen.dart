@@ -39,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           vendorName = vendorDoc.get('Vendor Name') ?? '';
           uid = vendorDoc.get('UID') ?? '';
-          balance = vendorDoc.get('Balance') ?? 0.0;
+          balance = vendorDoc.get('Balance') ?? 0;
         });
       } else {
         print('Vendor profile not found');
@@ -55,22 +55,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut(); // Firebase sign-out
+      await FirebaseAuth.instance.signOut();
       Navigator.of(context).pushNamedAndRemoveUntil(
         '/Login',
-        (route) => false, // Navigate to login, remove other routes
+        (route) => false,
       );
     } catch (e) {
       print('Error signing out: $e');
-      // Show error message or handle error as needed
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 24,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevation: 0,
       ),
       body: Center(
         child: _isLoading
@@ -78,14 +87,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Vendor Name: $vendorName'),
-                  Text('UID: $uid'),
-                  Text('Balance: $balance'),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 40),
+                  Container(
+                    width: 160,
+                    height: 160,
+                    decoration: ShapeDecoration(
+                      image: DecorationImage(
+                        image:
+                            NetworkImage("https://via.placeholder.com/160x160"),
+                        fit: BoxFit.cover,
+                      ),
+                      shape: CircleBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    '$vendorName',
+                    style: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 18,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'UID: $uid',
+                    style: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 18,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  Text(
+                    'Balance: $balance Pesos',
+                    style: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 18,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () {
-                      _signOut(context);
-                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          Color(0xFFE53935), // Red color for the button
+                      foregroundColor: Colors.white, // Text color
+                    ),
+                    onPressed: () => _signOut(context),
                     child: const Text('Sign Out'),
                   ),
                 ],

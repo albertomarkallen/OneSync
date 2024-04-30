@@ -1,7 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../models/models.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../models/models.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final MenuItem product;
@@ -35,7 +35,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     super.dispose();
   }
 
-  // Function to save changes to Firestore using the name field as an identifier
   Future<void> _saveProductDetails() async {
     String productName = widget.product.name;
     String userID = FirebaseAuth.instance.currentUser!.uid;
@@ -57,7 +56,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           'stock': int.parse(_stockController.text),
         });
 
-        Navigator.of(context).pop(); // Optionally pop the current screen
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Product details updated successfully!"),
           backgroundColor: Colors.green,
@@ -76,7 +75,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     }
   }
 
-// Function to delete the product from Firestore using the name field as an identifier
   Future<void> _deleteProduct() async {
     String productName = widget.product.name;
     FirebaseFirestore db = FirebaseFirestore.instance;
@@ -91,7 +89,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           snapshot.docs.first.reference.delete();
         }
       });
-      Navigator.of(context).pop(); // Pop the ProductDetailsScreen
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Product deleted successfully!"),
         backgroundColor: Colors.green,
@@ -108,50 +106,59 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Product'),
+        title: Text('Edit Product',
+            style: TextStyle(
+                color: Color(0xFF212121),
+                fontSize: 28,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+                height: 0.05)),
       ),
-      body: LayoutBuilder(builder: (context, constraints) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  height: constraints.maxHeight * 0.3,
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                  child: Icon(Icons.image),
-                ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                width: double.infinity,
+                color: Colors.grey[200],
+                child: Icon(Icons.image),
               ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Product Name'),
-                style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16.0),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Product Name'),
+              style: TextStyle(
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Inter',
               ),
-              const SizedBox(height: 8.0),
-              TextFormField(
-                controller: _priceController,
-                decoration: InputDecoration(labelText: 'Price (₱)'),
-                keyboardType: TextInputType.number,
-                style: TextStyle(fontSize: 18.0),
-              ),
-              const SizedBox(height: 8.0),
-              TextFormField(
-                controller: _stockController,
-                decoration: InputDecoration(labelText: 'Stock'),
-                keyboardType: TextInputType.number,
-                style: TextStyle(fontSize: 18.0),
-              ),
-            ],
-          ),
-        );
-      }),
+            ),
+            const SizedBox(height: 8.0),
+            TextFormField(
+              controller: _priceController,
+              decoration: InputDecoration(labelText: 'Price (₱)'),
+              keyboardType: TextInputType.number,
+              style: TextStyle(fontSize: 18.0, fontFamily: 'Inter'),
+            ),
+            const SizedBox(height: 8.0),
+            TextFormField(
+              controller: _stockController,
+              decoration: InputDecoration(labelText: 'Stock'),
+              keyboardType: TextInputType.number,
+              style: TextStyle(fontSize: 18.0, fontFamily: 'Inter'),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showDeleteConfirmationDialog(context),
-        child: const Icon(Icons.delete),
-        backgroundColor: Colors.red,
+        child:
+            Icon(Icons.delete, color: Colors.white), // Set icon color to white
+        backgroundColor: Color(0xFFD9544D),
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
@@ -159,9 +166,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           children: [
             ElevatedButton(
               onPressed: _saveProductDetails,
-              child: Text('Save'),
+              child: Text('Save', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.green,
+                backgroundColor: Colors.blue, // Change to blue color
+
+                textStyle: TextStyle(
+                  fontFamily: 'Inter',
+                ),
               ),
             ),
             ElevatedButton(
@@ -170,7 +181,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               },
               child: Text('Cancel'),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.red,
+                textStyle: TextStyle(fontFamily: 'Inter'),
               ),
             ),
           ],
@@ -183,20 +194,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Product'),
+        title: Text('Delete Product', style: TextStyle(fontFamily: 'Inter')),
         content:
             Text('Are you sure you want to delete ${widget.product.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(fontFamily: 'Inter')),
           ),
           ElevatedButton(
             onPressed: () {
-              _deleteProduct(); // Call the delete function
+              _deleteProduct();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Delete'),
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFD9544D)),
+            child: Text('Delete',
+                style: TextStyle(fontFamily: 'Inter', color: Colors.white)),
           ),
         ],
       ),

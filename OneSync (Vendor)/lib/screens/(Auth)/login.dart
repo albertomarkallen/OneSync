@@ -244,19 +244,47 @@ class LoginScreen extends StatelessWidget {
             // Check if user is not null
             if (user != null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Login successful!')),
+                SnackBar(
+                  backgroundColor:
+                      Colors.blue, // Change background color to blue
+                  content: Text(
+                    'Login successful!',
+                    style: TextStyle(
+                      color: Colors.white, // Change text color to white
+                      fontFamily: 'Inter', // Change font to Inter
+                    ),
+                  ),
+                ),
               );
               // Navigate to the next screen upon successful login
               Navigator.of(context).pushReplacementNamed('/');
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Failed to log in')),
+                SnackBar(
+                  backgroundColor:
+                      Colors.blue, // Change background color to blue
+                  content: Text(
+                    'Failed to log in',
+                    style: TextStyle(
+                      color: Colors.white, // Change text color to white
+                      fontFamily: 'Inter', // Change font to Inter
+                    ),
+                  ),
+                ),
               );
             }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Please enter valid email and password')),
+              SnackBar(
+                backgroundColor: Colors.blue, // Change background color to blue
+                content: Text(
+                  'Please enter valid email and password',
+                  style: TextStyle(
+                    color: Colors.white, // Change text color to white
+                    fontFamily: 'Inter', // Change font to Inter
+                  ),
+                ),
+              ),
             );
           }
         },

@@ -297,70 +297,73 @@ class _MenuScreenState extends State<MenuScreen> {
   // Grid View Widget of Menu Items
   Widget _buildMenuGrid() {
     return Expanded(
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3, // Change cross axis count as needed
-          crossAxisSpacing: 6.0,
-          mainAxisSpacing: 8.0,
-          childAspectRatio: 0.88,
-        ),
-        itemCount:
-            _displayedMenuItems.length + 1, // +1 for the 'Add Product' card
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return DottedBorder(
-              color: const Color(0xFF4196F0),
-              dashPattern: const [6, 3],
-              strokeWidth: 1,
-              radius: const Radius.circular(5.23),
-              borderType: BorderType.RRect,
-              child: SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: Card(
-                    color: const Color(0xFFEEF5FC),
-                    elevation: 0,
-                    child: IconButton(
-                      onPressed: _handleAddProduct,
-                      iconSize:
-                          30.0, // This property might not be necessary depending on your layout intentions.
-                      color: Colors.white,
-                      icon: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Container(
-                            width: 20.58,
-                            height: 20.58,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4196F0),
-                              borderRadius: BorderRadius.circular(6.24),
-                            ),
-                            child: const Icon(Icons.add, size: 12.12),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top: 4.0),
-                            child: Text(
-                              'Add Product',
-                              style: TextStyle(
-                                color: Color(0xFF4196F0),
-                                fontSize: 9.14,
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w400,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 5.0),
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16.0),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3, // Change cross axis count as needed
+            crossAxisSpacing: 6.0,
+            mainAxisSpacing: 8.0,
+            childAspectRatio: 0.88,
+          ),
+          itemCount:
+              _displayedMenuItems.length + 1, // +1 for the 'Add Product' card
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return DottedBorder(
+                color: const Color(0xFF4196F0),
+                dashPattern: const [6, 3],
+                strokeWidth: 1,
+                radius: const Radius.circular(5.23),
+                borderType: BorderType.RRect,
+                child: SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Card(
+                      color: const Color(0xFFEEF5FC),
+                      elevation: 0,
+                      child: IconButton(
+                        onPressed: _handleAddProduct,
+                        iconSize:
+                            30.0, // This property might not be necessary depending on your layout intentions.
+                        color: Colors.white,
+                        icon: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Container(
+                              width: 20.58,
+                              height: 20.58,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4196F0),
+                                borderRadius: BorderRadius.circular(6.24),
                               ),
+                              child: const Icon(Icons.add, size: 12.12),
                             ),
-                          )
-                        ],
+                            const Padding(
+                              padding: EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                'Add Product',
+                                style: TextStyle(
+                                  color: Color(0xFF4196F0),
+                                  fontSize: 9.14,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
-                    ),
-                  )),
-            );
-          } else {
-            return _menuList(context, _displayedMenuItems[index - 1]);
-          }
-        },
+                    )),
+              );
+            } else {
+              return _menuList(context, _displayedMenuItems[index - 1]);
+            }
+          },
+        ),
       ),
     );
   }
