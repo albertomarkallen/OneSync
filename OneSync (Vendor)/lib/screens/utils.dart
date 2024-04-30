@@ -34,6 +34,24 @@ Future<User?> createAccountWithEmailPassword(
   }
 }
 
+Future<bool> changePassword(String newPassword) async {
+  try {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      await user.updatePassword(newPassword);
+      print('Password updated successfully.');
+      return true; //
+    } else {
+      print('No user signed in.');
+      return false;
+    }
+  } catch (e) {
+    print('Error changing password: $e');
+    return false;
+  }
+}
+
 Future<void> signOutUser() async {
   try {
     await FirebaseAuth.instance.signOut();

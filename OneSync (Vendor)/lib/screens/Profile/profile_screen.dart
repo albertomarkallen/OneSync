@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
+import 'package:onesync/screens/Profile/edit_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String uid = '';
   int balance = 0;
   bool _isLoading = false;
+  String email = '';
 
   @override
   void initState() {
@@ -29,17 +31,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       String currentUserId = await getCurrentUserId();
-
       final vendorDoc = await FirebaseFirestore.instance
           .collection('Menu')
           .doc(currentUserId)
           .get();
 
+      var user = FirebaseAuth.instance.currentUser;
+      String userEmail = user?.email ?? "No email";
+
       if (vendorDoc.exists) {
         setState(() {
-          vendorName = vendorDoc.get('Vendor Name') ?? '';
-          uid = vendorDoc.get('UID') ?? '';
-          balance = vendorDoc.get('Balance') ?? 0;
+          vendorName = vendorDoc.data()?['Vendor Name'] ?? '';
+          uid = vendorDoc.data()?['UID'] ?? '';
+          balance = vendorDoc.data()?['Balance'] ?? 0;
+          email = userEmail;
         });
       } else {
         print('Vendor profile not found');
@@ -51,6 +56,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
+    }
+  }
+
+  void _handleChangeStoreProfile(BuildContext context) {
+    Navigator.of(context).pushNamed('/editProfile');
+  }
+
+  // void _handleChangeEmail(BuildContext context) {
+  //   Navigator.of(context).pushNamed('/editEmail');
+  // }
+
+  void _handleChangePassword(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => EditPasswordScreen()),
+    );
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -68,87 +96,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: Color(0xFF212121),
-            fontSize: 24,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+        title: Text('Profile'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () => _handleChangeStoreProfile(context),
           ),
-        ),
-        elevation: 0,
+        ],
       ),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 40),
-                  Container(
-                    width: 160,
-                    height: 160,
-                    decoration: ShapeDecoration(
-                      image: DecorationImage(
-                        image:
-                            NetworkImage("https://via.placeholder.com/160x160"),
-                        fit: BoxFit.cover,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: _isLoading
+              ? CircularProgressIndicator()
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(238, 245, 252, 0.925),
+                        border: Border.all(
+                            color: const Color.fromRGBO(158, 158, 158, 1)),
+                        borderRadius: BorderRadius.circular(100),
                       ),
-                      shape: CircleBorder(),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    '$vendorName',
-                    style: TextStyle(
-                      color: Color(0xFF212121),
-                      fontSize: 18,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
+                    SizedBox(height: 20),
+                    Text(
+                      vendorName,
+                      style: TextStyle(
+                          fontSize: 24.0, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  Text(
-                    'UID: $uid',
-                    style: TextStyle(
-                      color: Color(0xFF212121),
-                      fontSize: 18,
-                      fontFamily: 'Poppins',
+                    SizedBox(height: 20),
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          ListTile(
+                            leading: Icon(Icons.card_membership_outlined),
+                            title: Text(uid),
+                            trailing: Icon(Icons.arrow_forward_ios),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.email),
+                            title: Text(email),
+                            trailing: Icon(Icons.arrow_forward_ios),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.lock),
+                            title: Text('Password'),
+                            trailing: Icon(Icons.arrow_forward_ios),
+                            onTap: () => _handleChangePassword(context),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Balance: $balance Pesos',
-                    style: TextStyle(
-                      color: Color(0xFF212121),
-                      fontSize: 18,
-                      fontFamily: 'Poppins',
+                    ElevatedButton(
+                      onPressed: () => _signOut(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF0671E0),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 44.0,
+                        child: Center(
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Color(0xFFE53935), // Red color for the button
-                      foregroundColor: Colors.white, // Text color
-                    ),
-                    onPressed: () => _signOut(context),
-                    child: const Text('Sign Out'),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
-      bottomNavigationBar: const Navigation(),
+      bottomNavigationBar: Navigation(),
     );
-  }
-
-  Future<String> getCurrentUserId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return user.uid;
-    } else {
-      throw Exception('User not logged in');
-    }
   }
 }
