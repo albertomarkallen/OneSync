@@ -5,8 +5,8 @@ import 'package:onesync/screens/(Auth)/authenticationWrapper.dart';
 import 'package:onesync/screens/(Auth)/login.dart';
 import 'package:onesync/screens/Forecast/sales_data_table.dart';
 import 'package:onesync/screens/Home/cashout_screen.dart';
-import 'package:onesync/screens/MenuList/add_product_screen.dart';
 import 'package:onesync/screens/Home/inventory_tracker_screen.dart';
+import 'package:onesync/screens/MenuList/add_product_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +28,28 @@ class MyApp extends StatelessWidget {
         '/Cashout': (context) => CashOutScreen(),
       },
       theme: ThemeData(
-          // Add your theme customizations here
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Color(0xFF212121), // Title color
+            fontSize: 18,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
           ),
+          iconTheme: IconThemeData(
+            color: Color(0xFF212121),
+          ),
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFF212121),
+          unselectedItemColor:
+              Colors.grey[600], // Color for the unselected items in the navbar
+        ),
+      ),
+
       home:
           AuthenticationWrapper(), // Use AuthenticationWrapper as the first screen
     );
