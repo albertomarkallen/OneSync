@@ -107,7 +107,7 @@ class _CashInScreenState extends State<CashInScreen> {
                 ),
               ),
               child: Text(
-                'Cash Out',
+                'Cash In',
                 style: TextStyle(
                   color: Colors.white, // Text color
                 ),
@@ -158,7 +158,7 @@ class _CashInScreenState extends State<CashInScreen> {
 
       print('Amount deducted: $amount, Updated balance: $updatedBalance');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Amount deducted: $amount'),
+        content: Text('Amount added: $amount'),
       ));
 
       return updatedBalance;
