@@ -21,7 +21,7 @@ class _NavigationState extends State<Navigation> {
     });
 
     // Navigate to the selected screen without replacing the current one
-    Navigator.of(context).push(
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) {
         if (index == 0) {
           return const HomeScreen();
@@ -36,6 +36,8 @@ class _NavigationState extends State<Navigation> {
         }
         return const HomeScreen(); // Default to HomeScreen if index is out of bounds
       }),
+      (route) =>
+          false, // Predicate function that always returns false, so no routes are removed
     );
   }
 
