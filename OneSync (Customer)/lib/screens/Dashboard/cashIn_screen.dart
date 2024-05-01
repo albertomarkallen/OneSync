@@ -182,7 +182,7 @@ class _CashInScreenState extends State<CashInScreen> {
           _generateRandomTransactionId(); // Generate transaction ID
 
       Map<String, dynamic> transactionData = {
-        'type': 'cashout',
+        'type': 'Cash In',
         'totalPrice': amount,
         'date': FieldValue.serverTimestamp(),
         'currentUid': currentUserId,
