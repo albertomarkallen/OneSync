@@ -1,5 +1,4 @@
 import 'dart:math'; // Import to generate random codes
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +10,8 @@ class CashInScreen extends StatefulWidget {
 
 class _CashInScreenState extends State<CashInScreen> {
   TextEditingController _amountController = TextEditingController();
+  TextEditingController _codeController =
+      TextEditingController(); // Controller for the 6-digit code
   bool _showConfirmation = false;
   String _confirmedAmount = '';
 
@@ -29,7 +30,7 @@ class _CashInScreenState extends State<CashInScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text('Cash In'),
+        title: Text('Cash In', style: TextStyle(fontFamily: 'Inter')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -47,54 +48,62 @@ class _CashInScreenState extends State<CashInScreen> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 20),
-            SizedBox(
-              width: 345,
-              height: 45,
-              child: TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(
-                  labelText: "Amount",
-                  labelStyle: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF4D4D4D),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFABBED1)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.blue),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide:
-                        BorderSide(color: Colors.red), // Red border for error
-                  ),
-                  errorStyle: TextStyle(
-                    color: Colors
-                        .red, // Set the text color of the error message to red
-                    fontSize: 14, // Set the font size of the error message
-                    fontFamily:
-                        'Inter', // Set the font family of the error message
-                    fontWeight: FontWeight
-                        .w400, // Set the font weight of the error message
-                  ),
+            TextFormField(
+              controller: _amountController,
+              decoration: InputDecoration(
+                labelText: "Amount",
+                labelStyle: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF4D4D4D),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  // Add additional validation if needed
-                  return null;
-                },
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Color(0xFFABBED1)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.red),
+                ),
               ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 20),
+            TextFormField(
+              controller: _codeController,
+              decoration: InputDecoration(
+                labelText: "Enter 6-Digit Code",
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
+              ),
+              keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                bool isCodeValid = await _verifyCode(_codeController.text);
+                if (!isCodeValid) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Invalid Code Entered',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Inter',
+                              fontSize: 16)),
+                      backgroundColor: Colors.blue,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                  return;
+                }
                 setState(() {
                   _showConfirmation = true;
                   _confirmedAmount = _amountController.text;
@@ -109,8 +118,9 @@ class _CashInScreenState extends State<CashInScreen> {
               child: Text(
                 'Cash In',
                 style: TextStyle(
-                  color: Colors.white, // Text color
-                ),
+                    color: Colors.white, // Text color
+                    fontFamily: 'Inter' // Setting font family
+                    ),
               ),
             ),
           ],
@@ -123,9 +133,23 @@ class _CashInScreenState extends State<CashInScreen> {
                     await _deductAmountFromBalance(int.parse(_confirmedAmount));
                 if (updatedBalance > 0) {
                   await _storeCashOutTransaction(int.parse(_confirmedAmount));
+                  await _updateCodeAfterCashIn(); // Update the 6-digit code after successful transaction
+                  Navigator.pop(
+                      context, updatedBalance); // Return the updated balance
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Transaction successful, balance updated',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Inter',
+                              fontSize: 16)),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
                 }
-                Navigator.pop(
-                    context, updatedBalance); // Return the updated balance
               },
               child: Icon(Icons.check),
             )
@@ -133,41 +157,79 @@ class _CashInScreenState extends State<CashInScreen> {
     );
   }
 
+  Future<bool> _verifyCode(String enteredCode) async {
+    try {
+      var codeDoc = await FirebaseFirestore.instance
+          .collection('Cash-In')
+          .doc('6 Digit Code')
+          .get();
+      String storedCode = codeDoc.data()?['Code'] as String;
+      return storedCode == enteredCode;
+    } catch (e) {
+      print('Error verifying code: $e');
+      return false;
+    }
+  }
+
+  Future<void> _updateCodeAfterCashIn() async {
+    String newCode =
+        Random.secure().nextInt(1000000).toString().padLeft(6, '0');
+    await FirebaseFirestore.instance
+        .collection('Cash-In')
+        .doc('6 Digit Code')
+        .update({
+      'Code': newCode,
+    });
+    print('New 6-digit code generated and stored: $newCode');
+  }
+
   Future<int> _deductAmountFromBalance(int amount) async {
     try {
       String currentUserId = await getCurrentUserId();
-
       final vendorDoc = await FirebaseFirestore.instance
           .collection('Student-Users')
           .doc(currentUserId)
           .get();
-
       if (!vendorDoc.exists) {
         print('Vendor not found');
         return 0;
       }
-
       int currentBalance = vendorDoc.get('Balance') ?? 0;
       int updatedBalance = currentBalance + amount;
-
       FirebaseFirestore db = FirebaseFirestore.instance;
-
       await db.collection('Student-Users').doc(currentUserId).update({
         'Balance': updatedBalance,
       });
-
       print('Amount deducted: $amount, Updated balance: $updatedBalance');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Amount added: $amount'),
-      ));
-
       return updatedBalance;
     } catch (e) {
       print('Error adding amount: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error adding amount. Please try again.'),
-      ));
       return 0;
+    }
+  }
+
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
+    }
+  }
+
+  Future<String> _fetchRfid(String userId) async {
+    try {
+      final rfidSnapshot = await FirebaseFirestore.instance
+          .collection('Student-Users')
+          .doc(userId)
+          .get();
+      if (rfidSnapshot.exists && rfidSnapshot.data() != null) {
+        return rfidSnapshot.data()!['rfid'] ?? '';
+      } else {
+        throw Exception('RFID not found for user');
+      }
+    } catch (e) {
+      throw Exception('Error fetching RFID: $e');
     }
   }
 
@@ -198,32 +260,6 @@ class _CashInScreenState extends State<CashInScreen> {
       print('Cashout transaction stored in Firestore with ID: $transactionId');
     } catch (e) {
       print('Error storing cashout transaction: $e');
-    }
-  }
-
-  Future<String> getCurrentUserId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return user.uid;
-    } else {
-      throw Exception('User not logged in');
-    }
-  }
-
-  Future<String> _fetchRfid(String userId) async {
-    try {
-      final rfidSnapshot = await FirebaseFirestore.instance
-          .collection('Student-Users')
-          .doc(userId)
-          .get();
-
-      if (rfidSnapshot.exists && rfidSnapshot.data() != null) {
-        return rfidSnapshot.data()!['rfid'] ?? '';
-      } else {
-        throw Exception('RFID not found for user');
-      }
-    } catch (e) {
-      throw Exception('Error fetching RFID: $e');
     }
   }
 }
