@@ -248,9 +248,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           Text(
                                             '₱${orderDoc.get('totalPrice')}',
                                             style: TextStyle(
-                                              color: hasType
-                                                  ? Colors.green
-                                                  : Colors.red,
+                                              color: orderDoc.get('type') ==
+                                                      'cashout'
+                                                  ? Colors.red
+                                                  : Colors.green,
                                               fontWeight: FontWeight.w500,
                                               fontSize: 16.0,
                                             ),
