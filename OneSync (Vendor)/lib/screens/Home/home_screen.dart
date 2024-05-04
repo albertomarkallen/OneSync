@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Forecast/sales_data_table.dart';
 import 'package:onesync/screens/Home/cashout_screen.dart';
@@ -146,8 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.blue, // Set the background color to blue
                   borderRadius: BorderRadius.circular(10.0),
+                  image: DecorationImage(
+                    image: AssetImage('assets/Dashboard_Container.png'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 child: IntrinsicHeight(
                   child: Row(
@@ -168,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              'PHP $_balance', // Use your balance variable here
+                              'PHP ${NumberFormat('#,##0').format(_balance)}', // Using NumberFormat to format balance
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize:
@@ -177,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color:
                                     Colors.white, // Set the text color to white
                               ),
-                            ),
+                            )
                           ],
                         ),
                       ),

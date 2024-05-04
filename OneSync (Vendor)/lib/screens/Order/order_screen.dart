@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Order/cart_screen.dart';
@@ -41,7 +42,6 @@ class _OrderScreenState extends State<OrderScreen> {
   Future<void> _fetchItems() async {
     try {
       String userID = FirebaseAuth.instance.currentUser!.uid;
-      print('User ID: $userID');
       var snapshot = await FirebaseFirestore.instance
           .collection('Menu')
           .doc(userID)
@@ -50,13 +50,13 @@ class _OrderScreenState extends State<OrderScreen> {
 
       if (snapshot.docs.isNotEmpty) {
         List<MenuItem> fetchedItems = [];
-        Set<String> categories =
-            <String>{}; // Ensure this set is properly initialized if it's being used elsewhere.
+        Set<String> fetchedCategories = {'All'}; // Include 'All' initially
+
         snapshot.docs.forEach((doc) {
           try {
             MenuItem item = MenuItem.fromSnapshot(doc);
             fetchedItems.add(item);
-            categories.add(item.category); // Add category to the set
+            fetchedCategories.add(item.category); // Add category from each item
           } catch (e) {
             print('Error processing an item from snapshot: $e');
           }
@@ -65,6 +65,7 @@ class _OrderScreenState extends State<OrderScreen> {
         setState(() {
           items = fetchedItems;
           displayedItems = fetchedItems;
+          categories = fetchedCategories; // Update categories with fetched ones
           isLoading = false;
         });
       } else {
@@ -204,12 +205,15 @@ class _OrderScreenState extends State<OrderScreen> {
             prefixIcon: Icon(Icons.search),
             border: OutlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF717171)),
+              borderRadius: BorderRadius.circular(8),
             ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF717171)),
+              borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF717171)),
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
         ),
@@ -220,14 +224,14 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget _buildMenuGrid() {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.only(top: 10.0), // Add bottom padding here
+        padding: const EdgeInsets.only(top: 10.0),
         child: GridView.builder(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 6.0,
-            mainAxisSpacing: 8.0,
-            childAspectRatio: 0.88,
+            crossAxisSpacing: 10.0,
+            mainAxisSpacing: 12.0,
+            childAspectRatio: 1.1,
           ),
           itemCount: displayedItems.length,
           itemBuilder: (context, index) {
@@ -241,84 +245,37 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Widget _menuList(BuildContext context, MenuItem item,
       Function(MenuItem) addToCart, Function(MenuItem) removeFromCart) {
-    int cartQuantity = cart[item.name] ?? 0; // Get the current quantity in cart
-
+    int cartQuantity = cart[item.name] ?? 0;
     bool isInStock = item.stock > 0;
 
     return InkWell(
-      onTap: isInStock ? () {} : null, // Disable onTap if out of stock
+      onTap: isInStock ? () {} : null,
       child: Container(
         width: 110,
-        height: 115,
+        height: 30,
         clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-          color: isInStock
-              ? Colors.white
-              : Colors.grey.shade300, // Gray out if no stock
-          shape: RoundedRectangleBorder(
-            side: const BorderSide(
-              width: 0.26,
-              color: Color(0x514D4D4D),
-            ),
-            borderRadius: BorderRadius.circular(2),
+        decoration: BoxDecoration(
+          color: isInStock ? Colors.white : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(8), // Set rounded corners here
+          border: Border.all(
+            color: Color(0xFFEEF5FC),
+            width: 1,
           ),
         ),
         child: Stack(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Container(
-                child: IconButton(
-                  icon: cartQuantity > 0
-                      ? Text(cartQuantity.toString(),
-                          style: TextStyle(color: Colors.blue))
-                      : Icon(Icons.add,
-                          color: isInStock
-                              ? Colors.blue
-                              : Colors.grey), // Change color if no stock
-                  onPressed: isInStock
-                      ? () {
-                          if (cartQuantity > 0) {
-                            addToCart(item);
-                          } else {
-                            addToCart(item);
-                          }
-                        }
-                      : null, // Disable button if no stock
-                ),
-              ),
-            ),
             Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.remove),
-                      onPressed: isInStock
-                          ? () => removeFromCart(item)
-                          : null, // Disable button if no stock
-                      color: isInStock
-                          ? Colors.red
-                          : Colors.grey, // Change color if no stock
-                    ),
-                  ],
-                ),
                 Container(
-                  width: 110,
-                  height: 80,
+                  width: 200,
+                  height: 100,
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       image: NetworkImage(item.imageUrl),
-                      fit: BoxFit.fill,
+                      fit: BoxFit.cover,
                       colorFilter: isInStock
                           ? null
-                          : ColorFilter.mode(
-                              Colors.grey,
-                              BlendMode
-                                  .saturation), // Apply gray scale if no stock
+                          : ColorFilter.mode(Colors.grey, BlendMode.saturation),
                     ),
                   ),
                 ),
@@ -333,8 +290,8 @@ class _OrderScreenState extends State<OrderScreen> {
                           item.name,
                           style: TextStyle(
                             color: Color(0xFF212121),
-                            fontSize: 10,
-                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontFamily: 'Inter',
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -344,16 +301,14 @@ class _OrderScreenState extends State<OrderScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(
-                                left: 8), // Aligns with the name above
+                            padding: const EdgeInsets.all(8.0),
                             child: Text(
                               '${item.stock} left',
                               style: TextStyle(
-                                color: isInStock
-                                    ? Color(0xFF717171)
-                                    : Colors.grey, // Change color if no stock
-                                fontSize: 9,
-                                fontFamily: 'Poppins',
+                                color:
+                                    isInStock ? Color(0xFF717171) : Colors.grey,
+                                fontSize: 12,
+                                fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -361,12 +316,11 @@ class _OrderScreenState extends State<OrderScreen> {
                           Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: Text(
-                              '₱ ${item.price.toStringAsFixed(2)}', // Format price to two decimal places
+                              '₱ ${item.price.toStringAsFixed(2)}',
                               style: TextStyle(
-                                color: isInStock
-                                    ? Color(0xFF0663C7)
-                                    : Colors.grey, // Change color if no stock
-                                fontSize: 10,
+                                color:
+                                    isInStock ? Color(0xFF0663C7) : Colors.grey,
+                                fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
                               ),
@@ -376,8 +330,71 @@ class _OrderScreenState extends State<OrderScreen> {
                       ),
                     ],
                   ),
-                )
+                ),
               ],
+            ),
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(
+                    6.0), // Consistent padding around the GestureDetector
+                child: GestureDetector(
+                  onTap: isInStock ? () => addToCart(item) : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isInStock
+                          ? Color(0xFF32C997)
+                          : Colors.grey.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Container(
+                      margin: EdgeInsets.all(
+                          6.0), // Consistent margin inside the circle
+                      child: cartQuantity > 0
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                top: 8.0,
+                                right: 8.0,
+                                left: 8.0,
+                              ), // Corrected padding syntax
+                              child: Text(
+                                cartQuantity.toString(),
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            )
+                          : Icon(
+                              Icons.add,
+                              color: Colors.white,
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: GestureDetector(
+                onTap: cartQuantity > 0
+                    ? () => removeFromCart(item)
+                    : null, // Make it clickable if there are items in the cart
+                child: Container(
+                  margin: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cartQuantity > 0
+                        ? Color(0xFFFF594F)
+                        : Colors.grey, // Grey color if no items in the cart
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Icon(
+                      Icons.remove,
+                      color: Colors.white, // Icon color white for visibility
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -390,7 +407,7 @@ class _OrderScreenState extends State<OrderScreen> {
         .fold(0, (previousValue, quantity) => previousValue + quantity);
     return totalItems > 0
         ? Container(
-            color: Colors.blue[700], // Use a deep blue color for the background
+            color: Color(0xFF0671E0),
             padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: SafeArea(
               child: Row(
@@ -409,13 +426,13 @@ class _OrderScreenState extends State<OrderScreen> {
                         ),
                       ),
                       Text(
-                        'Total: ₱${_calculateTotal()}',
+                        'Total: ₱${NumberFormat('#,##0').format(_calculateTotal())}',
                         style: TextStyle(
                           fontSize: 24.0,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
-                      ),
+                      )
                     ],
                   ),
                   ElevatedButton(
@@ -441,10 +458,9 @@ class _OrderScreenState extends State<OrderScreen> {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.blue[800],
                       backgroundColor: Colors.white, // Button color
-                      elevation: 0, // Removes shadow for a flat design
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            5), // Adjust the radius as needed
+                        borderRadius: BorderRadius.circular(5),
                       ),
                     ),
                     child: Row(
@@ -472,13 +488,50 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order',
-            style: TextStyle(
-                color: Color(0xFF212121),
-                fontSize: 28,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w700,
-                height: 0.05)),
+        title: const Text(
+          'Make an Order',
+          style: TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 28,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: <Widget>[
+          Container(
+            width: 70,
+            height: 32,
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Color(0xFFEEF5FC),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () {
+                setState(() {
+                  cart.clear();
+                  items.forEach((item) => item.stock = 10);
+                });
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF0671E0),
+                padding: const EdgeInsets.all(
+                    0), // Remove padding as container has its own
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ), // Text color
+              ),
+              child: Text(
+                'Clear',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
