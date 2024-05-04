@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:onesync/screens/utils.dart';
@@ -28,48 +29,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // Make sure to handle the async operations properly and manage state changes.
   Future<void> _editProfile(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       try {
         String userID = FirebaseAuth.instance.currentUser!.uid;
         String storeName = _storeNameController.text;
-        String docID = storeName.toString();
-        
-        // Define the path to the user's product subcollection
-        var userProductsRef = FirebaseFirestore.instance
-            .collection('Menu') // Main collection
-            .doc(userID) // Document for each user
-            .collection('vendorProducts') // Subcollection for user's products
-            .doc(docID);
 
-        // Add a new product to the user's subcollection
-        await userProductsRef.set({
-          'name': storeName,
-          'imageUrl': '',
-        }).then((documentReference) async {
-          if (_imageFile != null) {
-            bool fileUploaded = await uploadFileForUser(_imageFile!);
-            if (fileUploaded) {
-              await userProductsRef
-                  .update({'imageUrl': 'uploaded_image_url_here'});
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Product added successfully')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Error uploading image')),
-              );
-            }
+        var storeDocRef = FirebaseFirestore.instance
+            .collection('Menu') // Main collection
+            .doc(userID)
+            .collection('vendorProducts')
+            .doc(storeName);
+
+        Map<String, dynamic> dataToUpdate = {'name': storeName};
+
+        // Update the store's information
+        await storeDocRef.set(dataToUpdate, SetOptions(merge: true));
+
+        if (_imageFile != null) {
+          String? uploadedFilePath = await uploadFileForUser(_imageFile!);
+          if (uploadedFilePath != null) {
+            String imageUrl = await FirebaseStorage.instance
+                .ref(uploadedFilePath)
+                .getDownloadURL();
+
+            await storeDocRef.update({'imageUrl': imageUrl});
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Profile updated successfully with image')),
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Product added successfully')),
+              const SnackBar(content: Text('Error uploading image')),
             );
           }
-        });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully')),
+          );
+        }
       } catch (e) {
+        print('Error editing profile: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error adding product')),
+          SnackBar(content: Text('Error editing profile: $e')),
         );
       }
     }
@@ -91,56 +93,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             children: [
               // Clickable Container for Image Upload
               Center(
-              child: GestureDetector(
-                onTap: () async {
-                  // Use ImagePicker to select an image
-                  final pickedImage =
-                      await ImagePicker().pickImage(source: ImageSource.gallery);
-                  if (pickedImage != null) {
-                    _handleImageUpload(File(pickedImage.path));
-                  }
-                },
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(238, 245, 252, 0.925),
-                    border: Border.all(color: const Color.fromRGBO(158, 158, 158, 1)),
-                    borderRadius: BorderRadius.circular(100),
-                    
+                child: GestureDetector(
+                  onTap: () async {
+                    // Use ImagePicker to select an image
+                    final pickedImage = await ImagePicker()
+                        .pickImage(source: ImageSource.gallery);
+                    if (pickedImage != null) {
+                      _handleImageUpload(File(pickedImage.path));
+                    }
+                  },
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(238, 245, 252, 0.925),
+                      border: Border.all(
+                          color: const Color.fromRGBO(158, 158, 158, 1)),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: _imageFile != null
+                        ? Image.file(_imageFile!, fit: BoxFit.cover)
+                        : Center(child: Icon(Icons.add_a_photo)),
                   ),
-                  child: _imageFile != null
-                      ? Image.file(_imageFile!, fit: BoxFit.cover)
-                      : Center(child: Icon(Icons.add_a_photo)),
                 ),
               ),
-            ),
               SizedBox(height: 32.0),
               // Label for input field
-            Text(
-              'Store Name',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              Text(
+                'Store Name',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 10), // Add spacing between label and input field
+              SizedBox(height: 10), // Add spacing between label and input field
               Align(
                 alignment: Alignment.center,
-                child:                
-                TextFormField(
+                child: TextFormField(
                   controller: _storeNameController,
                   decoration: InputDecoration(
                     labelText: 'OneSync',
-                    floatingLabelBehavior: FloatingLabelBehavior.never, // Keep label in place
+                    floatingLabelBehavior:
+                        FloatingLabelBehavior.never, // Keep label in place
                     border: OutlineInputBorder(),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color:Color.fromRGBO(65, 150, 240, 100)), // Set focused border color to blue
+                      borderSide: BorderSide(
+                          color: Color.fromRGBO(65, 150, 240,
+                              100)), // Set focused border color to blue
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color.fromRGBO(171, 190, 209, 25)), // Set enabled border color to blue
+                      borderSide: BorderSide(
+                          color: Color.fromRGBO(171, 190, 209,
+                              25)), // Set enabled border color to blue
                     ),
-                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16), // Adjust padding
+                    contentPadding: EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 16), // Adjust padding
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {

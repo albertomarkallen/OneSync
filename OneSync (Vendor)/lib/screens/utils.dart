@@ -74,22 +74,22 @@ Future<File?> getImageFromGallery(BuildContext context) async {
   return null;
 }
 
-Future<bool> uploadFileForUser(File file) async {
+Future<String?> uploadFileForUser(File file) async {
   try {
     final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) throw Exception("User ID is null");
+
     final storageRef = FirebaseStorage.instance.ref();
     final fileName = file.path.split('/').last;
     final timestamp = DateTime.now().microsecondsSinceEpoch;
     final uploadRef =
         storageRef.child('$userId/uploads/products/$timestamp-$fileName');
+
     await uploadRef.putFile(file);
-    return await uploadRef.getDownloadURL().then((value) {
-      print('File uploaded to: $value');
-      return true;
-    });
+    return '$userId/uploads/products/$timestamp-$fileName';
   } catch (e) {
     print('Error uploading file: $e');
-    return false;
+    return null;
   }
 }
 

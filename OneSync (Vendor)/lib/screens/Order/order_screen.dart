@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Order/cart_screen.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -52,10 +50,16 @@ class _OrderScreenState extends State<OrderScreen> {
 
       if (snapshot.docs.isNotEmpty) {
         List<MenuItem> fetchedItems = [];
+        Set<String> categories =
+            <String>{}; // Ensure this set is properly initialized if it's being used elsewhere.
         snapshot.docs.forEach((doc) {
-          MenuItem item = MenuItem.snapshot(doc);
-          fetchedItems.add(item);
-          categories.add(item.category); // Add category to the set
+          try {
+            MenuItem item = MenuItem.fromSnapshot(doc);
+            fetchedItems.add(item);
+            categories.add(item.category); // Add category to the set
+          } catch (e) {
+            print('Error processing an item from snapshot: $e');
+          }
         });
 
         setState(() {

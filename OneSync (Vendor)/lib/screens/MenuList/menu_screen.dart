@@ -3,7 +3,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/MenuList/product_details_screen.dart';
@@ -45,16 +44,14 @@ class _MenuScreenState extends State<MenuScreen> {
           .get();
 
       print('Number of documents fetched: ${snapshot.docs.length}');
-      // Check if the snapshot has data
       if (snapshot.docs.isNotEmpty) {
         var menuItems =
-            snapshot.docs.map((doc) => MenuItem.snapshot(doc)).toList();
+            snapshot.docs.map((doc) => MenuItem.fromSnapshot(doc)).toList();
         setState(() {
           _menuItems = menuItems;
           _displayedMenuItems = menuItems;
         });
       } else {
-        // Handle case when no menu items are found
         setState(() {
           _menuItems = [];
           _displayedMenuItems = [];
@@ -64,9 +61,10 @@ class _MenuScreenState extends State<MenuScreen> {
         );
       }
     } catch (e) {
-      // Handle errors by showing a Snackbar
+      print(
+          'Error fetching menu items: $e'); // It's good to print the error to the console for debugging.
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching menu items')),
+        SnackBar(content: Text('Error fetching menu items: $e')),
       );
     }
   }
@@ -229,10 +227,11 @@ class _MenuScreenState extends State<MenuScreen> {
             Container(
               width: 110,
               height: 80,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage("https://via.placeholder.com/110x78"),
-                  fit: BoxFit.fill,
+                  image: NetworkImage(
+                      item.imageUrl ?? "https://via.placeholder.com/110x78"),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
@@ -258,8 +257,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 8), // Aligns with the name above
+                        padding: const EdgeInsets.only(left: 8),
                         child: Text(
                           '${item.stock} left',
                           style: const TextStyle(
@@ -273,10 +271,9 @@ class _MenuScreenState extends State<MenuScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
-                          '₱ ${item.price.toStringAsFixed(2)}', // Format price to two decimal places
+                          '₱ ${item.price.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            color: Color(
-                                0xFF0663C7), // Consider defining this color in your theme settings
+                            color: Color(0xFF0663C7),
                             fontSize: 10,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w600,
