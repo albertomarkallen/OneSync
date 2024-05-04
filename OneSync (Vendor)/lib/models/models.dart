@@ -7,8 +7,8 @@ class MenuItem {
   String imageUrl;
   String category;
 
-  MenuItem({
-      required this.name,
+  MenuItem(
+      {required this.name,
       required this.price,
       required this.stock,
       this.imageUrl = 'https://via.placeholder.com/150',

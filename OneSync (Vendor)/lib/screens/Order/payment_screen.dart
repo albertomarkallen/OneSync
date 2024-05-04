@@ -1,13 +1,13 @@
+import 'dart:async'; // Import for Timer
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:onesync/screens/MenuList/menu_screen.dart';
-import 'package:onesync/screens/Order/cart_screen.dart'; // Adjust the import to your actual CartScreen path
+import 'package:onesync/screens/Order/order_screen.dart';
 import 'package:onesync/screens/Order/payment_successful_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
-import 'dart:async'; // Import for Timer
 
 class PaymentScreenPage extends StatefulWidget {
   final num totalPrice;
@@ -27,25 +27,30 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   String transactionId = '';
   String? currentUid;
   String displayMessage = 'Please tap your RFID card';
+  DatabaseReference rfidRef = FirebaseDatabase.instance.ref('RFID');
 
   @override
   void initState() {
     super.initState();
     _startRfidListener();
+    rfidRef.update(
+        {'Tapped': 1}); // Set 'Tapped' to 1 to indicate waiting for RFID
   }
 
   void _startRfidListener() {
-    final rfidRef = FirebaseDatabase.instance.ref('RFID/UID');
-    rfidRef.onValue.listen((event) {
-      print('Waiting for RFID card...');
+    rfidRef.child('UID').onValue.listen((event) {
       final newUid = event.snapshot.value as String?;
-      if (newUid != null) {
+      if (newUid != null && newUid.isNotEmpty) {
         setState(() {
           _rfidUid = newUid;
           _submitOrder(context);
         });
       } else {
-        _showMessageAndRedirect('RFID not found. Please reload RFID.');
+        // RFID key is empty, indicate waiting for RFID
+        setState(() {
+          _rfidUid = null;
+          displayMessage = 'Please tap your RFID card';
+        });
       }
     });
   }
@@ -69,14 +74,19 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
           .where('rfid', isEqualTo: _rfidUid)
           .get();
       if (studentSnapshot.docs.isEmpty) {
+        _updateStatus(2); // RFID not found in database
         _showMessageAndRedirect(
-            'Student with RFID $_rfidUid not found. Please reload RFID.');
+            'Student with RFID not found. Please reload RFID.');
         return;
       }
 
       int studentBalance = studentSnapshot.docs.first.get('Balance');
       if (studentBalance < total) {
+        _updateStatus(1); // Insufficient balance
         _showMessageAndRedirect('Insufficient balance. Please reload RFID.');
+        Timer(Duration(seconds: 3), () {
+          _clearRealtimeDatabaseValues();
+        });
         return;
       }
 
@@ -104,17 +114,12 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
             .add({'id': entry.key, 'newStock': currentStock - entry.value});
       }
 
-      return db.runTransaction((transaction) async {
-        // Update customer balance
+      await db.runTransaction((transaction) async {
         transaction.update(studentSnapshot.docs.first.reference,
             {'Balance': updatedStudentBalance});
+        transaction.update(db.collection('Menu').doc(currentUid),
+            {'Balance': updatedVendorBalance});
 
-        // Update vendor balance
-        transaction.update(db.collection('Menu').doc(currentUid), {
-          'Balance': updatedVendorBalance,
-        });
-
-        // Update each item stock in the transaction
         for (var item in updatedItems) {
           DocumentReference itemRef = db
               .collection('Menu')
@@ -124,7 +129,6 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
           transaction.update(itemRef, {'stock': item['newStock']});
         }
 
-        // Other transaction operations (e.g., log the transaction)
         Map<String, dynamic> orderData = {
           'date': Timestamp.fromDate(DateTime.now()),
           'totalPrice': total,
@@ -132,43 +136,49 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
               .map((entry) => {'name': entry.key, 'quantity': entry.value})
               .toList(),
           'rfid': _rfidUid,
-          'currentUid': currentUid, // Include currentUid in orderData
+          'currentUid': currentUid,
           'type': 'order'
         };
 
         transaction.set(
             db.collection('Transactions').doc(transactionId), orderData);
+        _updateStatus(3); // Order successful
+      });
 
-        return null;
-      }).then((_) {
-        print('Order successfully submitted, balances and stocks updated!');
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    PaymentSuccessfulScreen(totalPrice: widget.totalPrice)));
-      }).catchError((error) {
-        print('Failed to update balances and stocks: $error');
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('An error occurred during payment. Please try again.'),
-        ));
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  PaymentSuccessfulScreen(totalPrice: widget.totalPrice)));
+
+      Timer(Duration(seconds: 5), () {
+        _clearRealtimeDatabaseValues();
       });
     } catch (e) {
       print('Error fetching vendor data or submitting order: $e');
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('An error occurred during payment. Please try again.'),
-      ));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text('An error occurred during payment. Please try again.')));
     }
+  }
+
+  void _resetTotalInFirebase() {
+    rfidRef.update({'Total': 0});
+  }
+
+  void _resetStatusAndTapped() {
+    rfidRef.update({'Status': 0, 'Tapped': 0});
+  }
+
+  void _updateStatus(int status) {
+    rfidRef.update({'Status': status});
+  }
+
+  void _clearUID(int status) {
+    rfidRef.update({'UID': ''});
   }
 
   void _showMessageAndRedirect(String message) {
@@ -178,25 +188,48 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     });
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
-    Timer(Duration(seconds: 3), () {
+    Timer(Duration(seconds: 5), () {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => MenuScreen()));
+          context, MaterialPageRoute(builder: (context) => OrderScreen()));
+      _clearRealtimeDatabaseValues();
     });
+  }
+
+  void _clearRealtimeDatabaseValues() {
+    Timer(Duration(seconds: 5), () {
+      rfidRef.update({'Status': 0, 'Tapped': 0, 'Total': 0, 'UID': ''});
+    });
+  }
+
+  String _generateRandomTransactionId() {
+    const String chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    Random rnd = Random.secure();
+    return String.fromCharCodes(Iterable.generate(
+        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  }
+
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight:
-            70, // Increase or adjust this as needed to give more vertical space
+        toolbarHeight: 70,
         title: Padding(
-          padding: EdgeInsets.only(top: 4), // Fine-tune this value as needed
+          padding: EdgeInsets.only(top: 4),
           child: Text('Payment',
               style: TextStyle(
                 color: Color(0xFF212121),
                 fontSize: 28,
-                fontFamily: 'Poppins', // or 'Inter'
+                fontFamily: 'Poppins',
                 fontWeight: FontWeight.w700,
               )),
         ),
@@ -217,24 +250,5 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       ),
       bottomNavigationBar: Navigation(),
     );
-  }
-
-  // Helper method to generate random transaction ID
-  String _generateRandomTransactionId() {
-    const String chars =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    Random rnd = Random.secure();
-    return String.fromCharCodes(Iterable.generate(
-        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
-  }
-
-  // Helper method to get current user ID
-  Future<String> getCurrentUserId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return user.uid;
-    } else {
-      throw Exception('User not logged in');
-    }
   }
 }

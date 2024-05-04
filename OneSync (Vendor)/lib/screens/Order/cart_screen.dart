@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart'; // Import your 'navigation.dart' file
 import 'package:onesync/screens/Order/payment_screen.dart';
@@ -23,10 +24,17 @@ class _CartScreenState extends State<CartScreen> {
         .fold(0, (previousValue, element) => previousValue + element);
   }
 
+  void _updateTotalInFirebase() {
+    int total = _calculateTotal().toInt();
+    DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
+    databaseReference.child('RFID').update({'Total': total});
+  }
+
   void _incrementQuantity(String itemName) {
     setState(() {
       if (widget.cart.containsKey(itemName)) {
         widget.cart[itemName] = widget.cart[itemName]! + 1;
+        _updateTotalInFirebase();
       }
     });
   }
@@ -35,6 +43,7 @@ class _CartScreenState extends State<CartScreen> {
     setState(() {
       if (widget.cart.containsKey(itemName) && widget.cart[itemName]! > 0) {
         widget.cart[itemName] = widget.cart[itemName]! - 1;
+        _updateTotalInFirebase();
       }
     });
   }
