@@ -372,7 +372,7 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menu List',
+        title: const Text('Menu',
             style: TextStyle(
                 color: Color(0xFF212121),
                 fontSize: 28,
