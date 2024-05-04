@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:onesync/models/models.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Order/cart_screen.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -98,6 +99,7 @@ class _OrderScreenState extends State<OrderScreen> {
     setState(() {
       if (category.toLowerCase() == 'all') {
         selectedCategory = 'All';
+        _selectedLabel = 'All'; // Reset selected label to 'All'
         displayedItems = items;
       } else {
         selectedCategory = category.toLowerCase();
@@ -129,11 +131,17 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   int _calculateTotal() {
-    return cart.entries
+    int total = cart.entries
         .map((entry) =>
             items.firstWhere((item) => item.name == entry.key).price *
             entry.value)
         .reduce((value, element) => value + element);
+
+    // Update the "Total" value in Realtime Database
+    DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
+    databaseReference.child('RFID').update({'Total': total});
+
+    return total;
   }
 
   Widget _buildFilterCategory() {
@@ -155,15 +163,18 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _selectedLabelCategory(String label) {
+    bool isSelected =
+        _selectedLabel == label || (label == 'All' && _selectedLabel == 'All');
+
     return TextButton(
       onPressed: () => _onCategorySelected(label),
       style: TextButton.styleFrom(
-        foregroundColor: _selectedLabel == label ? Colors.white : Colors.blue,
-        backgroundColor: _selectedLabel == label ? Colors.blue : null,
+        foregroundColor: isSelected ? Colors.white : Colors.blue,
+        backgroundColor: isSelected ? Colors.blue : null,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
         ),
-        side: _selectedLabel == label ? null : BorderSide(color: Colors.blue),
+        side: isSelected ? null : BorderSide(color: Colors.blue),
       ),
       child: Text(
         label,

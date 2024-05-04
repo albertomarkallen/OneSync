@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:onesync/screens//Order/payment_successful_screen.dart';
+import 'package:onesync/screens/MenuList/menu_screen.dart';
+import 'package:onesync/screens/Order/cart_screen.dart'; // Adjust the import to your actual CartScreen path
+import 'package:onesync/screens/Order/payment_successful_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:math'; // Import to generate random codes
+import 'dart:math';
+import 'dart:async'; // Import for Timer
 
 class PaymentScreenPage extends StatefulWidget {
   final num totalPrice;
@@ -22,20 +25,17 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   bool _isLoading = false;
   String? _rfidUid;
   String transactionId = '';
-  String? currentUid; // Field to store currentUid
+  String? currentUid;
+  String displayMessage = 'Please tap your RFID card';
 
-  // Generate a random 8-digit alphanumeric code
-  String _generateRandomTransactionId() {
-    const String chars =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    Random rnd = Random.secure();
-    return String.fromCharCodes(Iterable.generate(
-        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  @override
+  void initState() {
+    super.initState();
+    _startRfidListener();
   }
 
   void _startRfidListener() {
     final rfidRef = FirebaseDatabase.instance.ref('RFID/UID');
-
     rfidRef.onValue.listen((event) {
       print('Waiting for RFID card...');
       final newUid = event.snapshot.value as String?;
@@ -44,6 +44,8 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
           _rfidUid = newUid;
           _submitOrder(context);
         });
+      } else {
+        _showMessageAndRedirect('RFID not found. Please reload RFID.');
       }
     });
   }
@@ -54,40 +56,27 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     });
 
     try {
-      // Generate the random transaction ID
       transactionId = _generateRandomTransactionId();
-
       FirebaseFirestore db = FirebaseFirestore.instance;
       int total = widget.totalPrice.toInt();
-
-      currentUid = await getCurrentUserId(); // Store currentUid
+      currentUid = await getCurrentUserId();
 
       final vendorDoc = await db.collection('Menu').doc(currentUid).get();
-
-      if (!vendorDoc.exists) {
-        throw Exception('Vendor not found');
-      }
+      if (!vendorDoc.exists) throw Exception('Vendor not found');
 
       QuerySnapshot studentSnapshot = await db
           .collection('Student-Users')
           .where('rfid', isEqualTo: _rfidUid)
           .get();
-
       if (studentSnapshot.docs.isEmpty) {
-        print('Student with RFID $_rfidUid not found');
+        _showMessageAndRedirect(
+            'Student with RFID $_rfidUid not found. Please reload RFID.');
         return;
       }
 
       int studentBalance = studentSnapshot.docs.first.get('Balance');
-
       if (studentBalance < total) {
-        print('Insufficient balance');
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Insufficient balance'),
-        ));
+        _showMessageAndRedirect('Insufficient balance. Please reload RFID.');
         return;
       }
 
@@ -182,42 +171,45 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
     }
   }
 
-  Future<String> getCurrentUserId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return user.uid;
-    } else {
-      throw Exception('User not logged in');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _startRfidListener();
+  void _showMessageAndRedirect(String message) {
+    setState(() {
+      displayMessage = message;
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+    Timer(Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => MenuScreen()));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Payment in Progress'),
+        toolbarHeight:
+            70, // Increase or adjust this as needed to give more vertical space
+        title: Padding(
+          padding: EdgeInsets.only(top: 4), // Fine-tune this value as needed
+          child: Text('Payment',
+              style: TextStyle(
+                color: Color(0xFF212121),
+                fontSize: 28,
+                fontFamily: 'Poppins', // or 'Inter'
+                fontWeight: FontWeight.w700,
+              )),
+        ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _rfidUid == null
-                  ? 'Please tap your RFID card'
-                  : 'Order submitted',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(displayMessage,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
-            Text(
-              'Total: ₱${widget.totalPrice}',
-              style: TextStyle(fontSize: 18),
-            ),
+            Text('Total: ₱${widget.totalPrice}',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 40),
             if (_isLoading) CircularProgressIndicator(),
           ],
@@ -225,5 +217,24 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       ),
       bottomNavigationBar: Navigation(),
     );
+  }
+
+  // Helper method to generate random transaction ID
+  String _generateRandomTransactionId() {
+    const String chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    Random rnd = Random.secure();
+    return String.fromCharCodes(Iterable.generate(
+        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  }
+
+  // Helper method to get current user ID
+  Future<String> getCurrentUserId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return user.uid;
+    } else {
+      throw Exception('User not logged in');
+    }
   }
 }

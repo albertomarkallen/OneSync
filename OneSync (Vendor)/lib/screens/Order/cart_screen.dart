@@ -143,7 +143,18 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cart'),
+        toolbarHeight:
+            70, // Increase or adjust this as needed to give more vertical space
+        title: Padding(
+          padding: EdgeInsets.only(top: 4), // Fine-tune this value as needed
+          child: Text('Cart',
+              style: TextStyle(
+                color: Color(0xFF212121),
+                fontSize: 28,
+                fontFamily: 'Poppins', // or 'Inter'
+                fontWeight: FontWeight.w700,
+              )),
+        ),
       ),
       body: Column(
         children: [
@@ -160,9 +171,21 @@ class _CartScreenState extends State<CartScreen> {
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(itemName),
-                      const SizedBox(height: 4),
-                      Text('Subtotal: ₱${subtotal.toStringAsFixed(2)}'),
+                      Text(
+                        itemName,
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Subtotal: ₱${subtotal.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                   trailing: Row(
@@ -170,14 +193,22 @@ class _CartScreenState extends State<CartScreen> {
                     children: [
                       IconButton(
                         onPressed: () => _decrementQuantity(itemName),
-                        icon: const Icon(Icons.remove),
+                        icon: Icon(Icons.remove, color: Colors.red),
+                        tooltip: 'Decrease quantity',
                       ),
-                      const SizedBox(width: 8),
-                      Text(itemQuantity.toString()),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
+                      Text(
+                        itemQuantity.toString(),
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(width: 8),
                       IconButton(
                         onPressed: () => _incrementQuantity(itemName),
-                        icon: const Icon(Icons.add),
+                        icon: Icon(Icons.add, color: Colors.green),
+                        tooltip: 'Increase quantity',
                       ),
                     ],
                   ),
@@ -188,7 +219,7 @@ class _CartScreenState extends State<CartScreen> {
           _buildCheckoutButton(context),
         ],
       ),
-      bottomNavigationBar: const Navigation(),
+      bottomNavigationBar: Navigation(),
     );
   }
 }
