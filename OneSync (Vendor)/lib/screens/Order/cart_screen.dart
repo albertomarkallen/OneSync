@@ -33,8 +33,22 @@ class _CartScreenState extends State<CartScreen> {
   void _incrementQuantity(String itemName) {
     setState(() {
       if (widget.cart.containsKey(itemName)) {
-        widget.cart[itemName] = widget.cart[itemName]! + 1;
-        _updateTotalInFirebase();
+        int currentQuantity = widget.cart[itemName]!;
+        int availableStock = widget.items
+            .firstWhere((item) => item['name'] == itemName)['stock'];
+
+        if (currentQuantity < availableStock) {
+          widget.cart[itemName] = currentQuantity + 1;
+          _updateTotalInFirebase();
+        } else {
+          // Show a snackbar or dialog indicating that the stock is insufficient
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Insufficient stock for $itemName'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       }
     });
   }
