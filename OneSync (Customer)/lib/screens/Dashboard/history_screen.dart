@@ -11,13 +11,13 @@ class HistoryScreen extends StatefulWidget {
   final bool showSearchBar;
   final bool showFilterCategory;
 
-  const HistoryScreen(
-      {Key? key,
-      this.showBottomNav = true,
-      this.showActionButton = false,
-      this.showSearchBar = true,
-      this.showFilterCategory = true})
-      : super(key: key);
+  const HistoryScreen({
+    Key? key,
+    this.showBottomNav = true,
+    this.showActionButton = false,
+    this.showSearchBar = true,
+    this.showFilterCategory = true,
+  }) : super(key: key);
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -69,8 +69,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
         return AlertDialog(
           title: isNewType
-              ? const Text('Cashout Details')
-              : const Text('Order Details'),
+              ? const Text('Transaction Details')
+              : const Text('Transaction Details'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -157,8 +157,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _buildTransactionCard(DocumentSnapshot orderDoc) {
     Timestamp timestamp = orderDoc.get('date');
     DateTime orderDate = timestamp.toDate().add(const Duration(hours: 8));
-    bool hasType =
-        (orderDoc.data() as Map<String, dynamic>).containsKey('type');
+    String type = orderDoc.get('type') ?? ''; // Get the transaction type
+    bool isCashIn =
+        type.toLowerCase() == 'cash In' || type.toLowerCase() == 'cashin';
+    bool isOrder = type.toLowerCase() == 'order';
+
     return Card(
       color: Colors.white,
       elevation: 0,
@@ -206,7 +209,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   Text('₱${orderDoc.get('totalPrice')}',
                       style: TextStyle(
-                          color: hasType ? Colors.green : Colors.red,
+                          color: isCashIn
+                              ? Colors.green
+                              : isOrder
+                                  ? Colors.red
+                                  : Colors.black, // Apply color based on type
                           fontWeight: FontWeight.w500,
                           fontSize: 16.0)),
                   const SizedBox(height: 8),
@@ -272,10 +279,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                var transactions = snapshot.data!.docs;
+
+                // Filter transactions based on the selected label
+                if (_selectedLabel == 'Cash In') {
+                  transactions = transactions
+                      .where((transaction) =>
+                          transaction.get('type') == 'Cash In' ||
+                          transaction.get('type') == 'cashin')
+                      .toList();
+                } else if (_selectedLabel == 'Cash Out') {
+                  transactions = transactions
+                      .where(
+                          (transaction) => transaction.get('type') == 'order')
+                      .toList();
+                }
+
                 return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
+                  itemCount: transactions.length,
                   itemBuilder: (context, index) {
-                    return _buildTransactionCard(snapshot.data!.docs[index]);
+                    return _buildTransactionCard(transactions[index]);
                   },
                 );
               },
@@ -316,11 +339,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: TextButton(
         onPressed: () {
           setState(() {
-            if (_selectedLabel == label) {
-              _selectedLabel = '';
-            } else {
-              _selectedLabel = label;
-            }
+            _selectedLabel = label; // Update the selected label
           });
         },
         style: TextButton.styleFrom(

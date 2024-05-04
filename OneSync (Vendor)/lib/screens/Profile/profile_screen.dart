@@ -5,7 +5,7 @@ import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Profile/edit_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -71,10 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.of(context).pushNamed('/editProfile');
   }
 
-  // void _handleChangeEmail(BuildContext context) {
-  //   Navigator.of(context).pushNamed('/editEmail');
-  // }
-
   void _handleChangePassword(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => EditPasswordScreen()),
@@ -97,7 +93,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+              color: Color(0xFF212121),
+              fontSize: 28,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w700,
+              height: 0.05),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.edit),

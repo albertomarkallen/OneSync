@@ -140,16 +140,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: Colors.white.withOpacity(1.0),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 0, // Removes the shadow
-        title: const Text('Transaction History',
+        title: const Text('Transactions',
             style: TextStyle(
-              color: Color(0xFF212121),
-              fontSize: 18,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-            )),
+                color: Color(0xFF212121),
+                fontSize: 28,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w700,
+                height: 0.05)),
       ),
       body: FutureBuilder<String>(
         future: getCurrentUserId(),
