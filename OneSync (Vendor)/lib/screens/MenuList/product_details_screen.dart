@@ -20,6 +20,12 @@ class ProductDetailsScreen extends StatefulWidget {
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  String _selectedCategory = 'Main Dishes';
+  List<String> categoriesList = [
+    'Main Dishes',
+    'Snacks',
+    'Beverages',
+  ];
   late TextEditingController _nameController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
@@ -45,6 +51,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Future<void> _saveProductDetails() async {
     String productName = widget.product.name;
     String userID = FirebaseAuth.instance.currentUser!.uid;
+
     FirebaseFirestore db = FirebaseFirestore.instance;
     try {
       var querySnapshot = await db
@@ -61,6 +68,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           'name': _nameController.text,
           'price': double.parse(_priceController.text),
           'stock': int.parse(_stockController.text),
+          'category': _selectedCategory,
         });
 
         Navigator.of(context).pop();
@@ -101,6 +109,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         'stock': int.parse(_stockController.text),
         'price': double.parse(_priceController.text),
         'imageUrl': widget.product.imageUrl,
+        'category': _selectedCategory, // Include the category
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -352,6 +361,67 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w400,
                     ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20.0),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Food Category',
+                  style: TextStyle(
+                    color: Color(0xFF212121),
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Container(
+                  width: 345,
+                  height: 45,
+                  alignment: Alignment.center,
+                  decoration: ShapeDecoration(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(width: 1, color: Color(0x3FABBED1)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedCategory = newValue!;
+                      });
+                    },
+                    items: categoriesList
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide
+                            .none, // Ensures no visible border around the dropdown
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10), // Adjusted padding
+                    ),
+                    style: TextStyle(
+                      color: Color(0xFF4D4D4D),
+                      fontSize: 16,
+                      fontFamily: 'Poppins',
+                    ),
+                    dropdownColor: Colors.white,
+                    iconSize: 24,
+                    isExpanded:
+                        true, // Ensures the dropdown fills the width of its parent container
                   ),
                 ),
               ],
