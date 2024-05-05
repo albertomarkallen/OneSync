@@ -175,8 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               'PHP ${NumberFormat('#,##0').format(_balance)}', // Using NumberFormat to format balance
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize:
-                                    36.0, // Increased font size for balance
+                                fontSize: 32.0,
                                 fontWeight: FontWeight.bold,
                                 color:
                                     Colors.white, // Set the text color to white
