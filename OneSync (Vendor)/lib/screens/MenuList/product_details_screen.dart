@@ -95,9 +95,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       String userId = FirebaseAuth.instance.currentUser!.uid;
       String productName = _nameController.text;
 
-      if (widget.product.imageUrl.isEmpty) {
-        throw Exception("No image URL found. Please upload an image first.");
-      }
+      // Use a default image URL if none is provided
+      String imageUrl = widget.product.imageUrl.isNotEmpty
+          ? widget.product.imageUrl
+          : 'https://via.placeholder.com/150';
 
       await FirebaseFirestore.instance
           .collection('Menu')
@@ -108,7 +109,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         'name': productName,
         'stock': int.parse(_stockController.text),
         'price': double.parse(_priceController.text),
-        'imageUrl': widget.product.imageUrl,
+        'imageUrl': imageUrl, // Set the image URL to either provided or default
         'category': _selectedCategory, // Include the category
       });
 
@@ -210,13 +211,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (widget.product.imageUrl != null &&
-                widget.product.imageUrl!.isNotEmpty)
+            if (widget
+                .product.imageUrl.isNotEmpty) // Check if imageUrl is not empty
               Stack(
                 alignment: Alignment.topRight,
                 children: [
                   Image.network(
-                    widget.product.imageUrl!,
+                    widget.product.imageUrl,
                     width: MediaQuery.of(context).size.width,
                     height: MediaQuery.of(context).size.height * 0.3,
                     fit: BoxFit.cover,
@@ -243,19 +244,25 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       );
                     },
                   ),
-                  IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       setState(() {
                         widget.product.imageUrl = ""; // Clear the image URL
                       });
                       // Optionally, delete the image from storage here
                     },
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.close, color: Colors.white),
+                    ),
                   ),
                 ],
               ),
-            if (widget.product.imageUrl == null ||
-                widget.product.imageUrl!.isEmpty)
+            if (widget.product.imageUrl.isEmpty) // Check if imageUrl is empty
               Center(
                 child: Container(
                   width: 200,
