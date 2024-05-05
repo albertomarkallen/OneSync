@@ -44,12 +44,13 @@ dependencies:
   firebase_storage: ^11.7.2
   gallery_picker: ^0.5.1
   image_picker: ^1.1.0
-  syncfusion_flutter_charts: ^25.1.40
+  syncfusion_flutter_charts: ^25.1.42+1
   csv: ^6.0.0
   fl_chart: ^0.67.0
   tflite_flutter: ^0.10.4
   provider: ^6.1.2
   flutter_svg: ^2.0.10+1
+  syncfusion_flutter_core: ^25.1.42
 
 
 dev_dependencies:

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -20,14 +21,23 @@ Future<User?> signInWithEmailPassword(String email, String password) async {
 }
 
 Future<User?> createAccountWithEmailPassword(
-    String email, String password) async {
+    String email, String password, String storeName, String rfid) async {
   try {
     final UserCredential userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
-    return userCredential.user;
+    String userId = userCredential.user!.uid;
+
+    User? user = userCredential.user;
+    await user!.updateProfile(displayName: storeName);
+    await FirebaseFirestore.instance.collection('Menu').doc(userId).set({
+      'email': email,
+      'Vendor Name': storeName,
+      'UID': rfid,
+    });
+    return user;
   } catch (e) {
     print('Error creating account: $e');
     return null;
