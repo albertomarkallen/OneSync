@@ -53,8 +53,8 @@ class _NavigationState extends State<Navigation> {
             padding: EdgeInsets.only(top: 12),
             child: SvgPicture.asset(
               'assets/Dashboard_Nav.svg',
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               color: Color(0xFF717171),
             ),
           ),
@@ -65,8 +65,8 @@ class _NavigationState extends State<Navigation> {
             padding: EdgeInsets.only(top: 12),
             child: SvgPicture.asset(
               'assets/Menu_Nav.svg',
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               color: Color(0xFF717171),
             ),
           ),
@@ -81,7 +81,7 @@ class _NavigationState extends State<Navigation> {
             padding: EdgeInsets.all(10), // Padding inside the circle
             child: Icon(
               Icons.add,
-              size: 24,
+              size: 20,
               color: Colors.white,
             ),
           ),
@@ -92,8 +92,8 @@ class _NavigationState extends State<Navigation> {
             padding: EdgeInsets.only(top: 12),
             child: SvgPicture.asset(
               'assets/History_Nav.svg',
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               color: Color(0xFF717171),
             ),
           ),
@@ -104,8 +104,8 @@ class _NavigationState extends State<Navigation> {
             padding: EdgeInsets.only(top: 12),
             child: SvgPicture.asset(
               'assets/Profile_Nav.svg',
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               color: Color(0xFF717171),
             ),
           ),
