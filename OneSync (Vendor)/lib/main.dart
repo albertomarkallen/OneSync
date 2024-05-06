@@ -7,8 +7,11 @@ import 'package:onesync/screens/Forecast/sales_data_table.dart';
 import 'package:onesync/screens/Home/cashout_screen.dart';
 import 'package:onesync/screens/Home/inventory_tracker_screen.dart';
 import 'package:onesync/screens/MenuList/add_product_screen.dart';
+import 'package:syncfusion_flutter_core/core.dart';
 
 Future<void> main() async {
+  SyncfusionLicense.registerLicense(
+      '@32352e302e30IuvJFe4S+IYtDWgaaM7SaYhNm4EnyUEh9hCaZ2E0ax0=');
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());

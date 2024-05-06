@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:onesync/screens/(Auth)/SignUpScreen.dart';
 import 'package:onesync/screens/utils.dart';
 
@@ -10,6 +11,24 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SvgPicture.asset(
+                'assets/OneSync_Logo.svg',
+                height: 44,
+                width: 44,
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -132,42 +151,28 @@ class LoginScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const SignUpScreen()),
+          MaterialPageRoute(
+            builder: (context) => SignUpScreen(),
+          ),
         );
       },
-      child: Align(
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Don’t have an account? ',
-                    style: TextStyle(
-                      color: Colors.black.withOpacity(0.7),
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      height: 0.09,
-                    ),
-                  ),
-                  const TextSpan(
-                    text: 'Sign Up',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      height: 0.09,
-                    ),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Don't have an account? ",
+            style: TextStyle(
+              color: Colors.black.withOpacity(0.69),
             ),
-          ],
-        ),
+          ),
+          Text(
+            "Sign up",
+            style: TextStyle(
+              color: Colors.black.withOpacity(0.69),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

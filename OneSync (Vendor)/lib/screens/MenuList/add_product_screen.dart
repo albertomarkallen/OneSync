@@ -47,14 +47,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
         String productName = _nameController.text;
         String docId = productName;
 
-        String? uploadedFilePath = await uploadFileForUser(_uploadedImageFile!);
-        if (uploadedFilePath == null) {
-          throw Exception("File upload failed.");
+        String? uploadedFilePath;
+        if (_uploadedImageFile != null) {
+          uploadedFilePath = await uploadFileForUser(_uploadedImageFile!);
         }
 
-        String imageUrl = await FirebaseStorage.instance
-            .ref(uploadedFilePath)
-            .getDownloadURL();
+        String imageUrl = uploadedFilePath != null
+            ? await FirebaseStorage.instance
+                .ref(uploadedFilePath)
+                .getDownloadURL()
+            : 'https://via.placeholder.com/150';
 
         await FirebaseFirestore.instance
             .collection('Menu')
