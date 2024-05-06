@@ -150,16 +150,18 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildFilterCategory() {
+    var labels = ['All', 'Main Dishes', 'Snacks', 'Beverages'];
+
     return Container(
       margin: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
       child: SizedBox(
         height: 35,
         child: ListView(
           scrollDirection: Axis.horizontal,
-          children: categories.map((category) {
+          children: labels.map((label) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: _selectedLabelCategory(category),
+              child: _selectedLabelCategory(label),
             );
           }).toList(),
         ),
@@ -258,8 +260,11 @@ class _OrderScreenState extends State<OrderScreen> {
           color: isInStock ? Colors.white : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(8), // Set rounded corners here
           border: Border.all(
-            color: Color(0xFFEEF5FC),
-            width: 1,
+            color: cartQuantity > 0
+                ? Colors.blue
+                : Color(
+                    0xFFEEF5FC), // Change border color based on cartQuantity
+            width: 2,
           ),
         ),
         child: Stack(
@@ -341,32 +346,27 @@ class _OrderScreenState extends State<OrderScreen> {
                 child: GestureDetector(
                   onTap: isInStock ? () => addToCart(item) : null,
                   child: Container(
+                    width:
+                        25, // Specify width to keep the circle size consistent
+                    height:
+                        25, // Specify height to keep the circle size consistent
                     decoration: BoxDecoration(
                       color: isInStock
                           ? Color(0xFF32C997)
                           : Colors.grey.withOpacity(0.5),
                       shape: BoxShape.circle,
                     ),
-                    child: Container(
-                      margin: EdgeInsets.all(
-                          6.0), // Consistent margin inside the circle
-                      child: cartQuantity > 0
-                          ? Padding(
-                              padding: const EdgeInsets.only(
-                                top: 8.0,
-                                right: 8.0,
-                                left: 8.0,
-                              ), // Corrected padding syntax
-                              child: Text(
-                                cartQuantity.toString(),
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            )
-                          : Icon(
-                              Icons.add,
-                              color: Colors.white,
-                            ),
-                    ),
+                    alignment:
+                        Alignment.center, // Ensure the icon/text is centered
+                    child: cartQuantity > 0
+                        ? Text(
+                            cartQuantity.toString(),
+                            style: TextStyle(color: Colors.white),
+                          )
+                        : Icon(
+                            Icons.add,
+                            color: Colors.white,
+                          ),
                   ),
                 ),
               ),
@@ -374,24 +374,20 @@ class _OrderScreenState extends State<OrderScreen> {
             Align(
               alignment: Alignment.topLeft,
               child: GestureDetector(
-                onTap: cartQuantity > 0
-                    ? () => removeFromCart(item)
-                    : null, // Make it clickable if there are items in the cart
+                onTap: cartQuantity > 0 ? () => removeFromCart(item) : null,
                 child: Container(
+                  width: 25, // Match the size with the add button
+                  height: 25, // Match the size with the add button
                   margin: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: cartQuantity > 0
-                        ? Color(0xFFFF594F)
-                        : Colors.grey, // Grey color if no items in the cart
+                    color: cartQuantity > 0 ? Color(0xFFFF594F) : Colors.grey,
                     shape: BoxShape.circle,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Icon(
-                      Icons.remove,
-                      color: Colors.white, // Icon color white for visibility
-                      size: 24,
-                    ),
+                  alignment: Alignment.center, // Ensure the icon is centered
+                  child: Icon(
+                    Icons.remove,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
               ),

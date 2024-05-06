@@ -166,15 +166,14 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight:
-            70, // Increase or adjust this as needed to give more vertical space
+        toolbarHeight: 70,
         title: Padding(
-          padding: EdgeInsets.only(top: 4), // Fine-tune this value as needed
-          child: Text('Cart',
+          padding: EdgeInsets.only(top: 4),
+          child: Text('Order Details',
               style: TextStyle(
                 color: Color(0xFF212121),
                 fontSize: 28,
-                fontFamily: 'Poppins', // or 'Inter'
+                fontFamily: 'Poppins',
                 fontWeight: FontWeight.w700,
               )),
         ),
@@ -187,10 +186,29 @@ class _CartScreenState extends State<CartScreen> {
               itemBuilder: (context, index) {
                 String itemName = widget.cart.keys.elementAt(index);
                 int itemQuantity = widget.cart.values.elementAt(index);
-                int itemPrice = widget.items
-                    .firstWhere((item) => item['name'] == itemName)['price'];
+                Map<String, dynamic> item =
+                    widget.items.firstWhere((item) => item['name'] == itemName);
+                int itemPrice = item['price'];
+                String imageUrl = item['imageUrl'];
                 int subtotal = itemPrice * itemQuantity;
+
                 return ListTile(
+                  leading: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      shape: BoxShape.rectangle,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(imageUrl, fit: BoxFit.cover),
+                    ),
+                  ),
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -214,24 +232,42 @@ class _CartScreenState extends State<CartScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        onPressed: () => _decrementQuantity(itemName),
-                        icon: Icon(Icons.remove, color: Colors.red),
-                        tooltip: 'Decrease quantity',
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFDBEDFF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          iconSize: 18,
+                          onPressed: () => _decrementQuantity(itemName),
+                          icon: Icon(Icons.remove, color: Color(0xFF4196F0)),
+                          tooltip: 'Decrease quantity',
+                        ),
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        itemQuantity.toString(),
-                        style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () => _incrementQuantity(itemName),
-                        icon: Icon(Icons.add, color: Colors.green),
-                        tooltip: 'Increase quantity',
+                      SizedBox(width: 10),
+                      Text(itemQuantity.toString(),
+                          style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                      SizedBox(width: 10),
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF4196F0),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          iconSize: 18,
+                          onPressed: () => _incrementQuantity(itemName),
+                          icon: Icon(Icons.add, color: Color(0xFFFFFFFF)),
+                          tooltip: 'Increase quantity',
+                        ),
                       ),
                     ],
                   ),

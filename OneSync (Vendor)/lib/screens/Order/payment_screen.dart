@@ -9,6 +9,56 @@ import 'package:onesync/screens/Order/payment_successful_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
 
+class BreathingCircle extends StatefulWidget {
+  @override
+  _BreathingCircleState createState() => _BreathingCircleState();
+}
+
+class _BreathingCircleState extends State<BreathingCircle>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 1),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.9, end: 1.1).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: 100,
+          height: 100,
+          child: Center(
+            child: Container(
+              width: 100 * _animation.value,
+              height: 100 * _animation.value,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class PaymentScreenPage extends StatefulWidget {
   final num totalPrice;
   final Map<String, int> cart;
@@ -49,7 +99,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
         // RFID key is empty, indicate waiting for RFID
         setState(() {
           _rfidUid = null;
-          displayMessage = 'Please tap your RFID card';
+          displayMessage = 'Payment in Progress';
         });
       }
     });
@@ -225,28 +275,147 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
         toolbarHeight: 70,
         title: Padding(
           padding: EdgeInsets.only(top: 4),
-          child: Text('Payment',
-              style: TextStyle(
-                color: Color(0xFF212121),
-                fontSize: 28,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w700,
-              )),
+          child: Text(
+            'Payment',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              color: Color(0xFF212121),
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(displayMessage,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 20),
-            Text('Total: ₱${widget.totalPrice}',
-                style: TextStyle(fontSize: 18)),
-            SizedBox(height: 40),
-            if (_isLoading) CircularProgressIndicator(),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  displayMessage,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4D4D4D), // Font color changed to 4D4D4D
+                  ),
+                ),
+                SizedBox(
+                    height: 5), // Added spacing between message and total price
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Baseline(
+                      baseline: 0,
+                      baselineType: TextBaseline.alphabetic,
+                      child: Text(
+                        'PHP',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFF0671E0), // Change color to 0671E0
+                          fontSize: 16, // Adjust font size as needed
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${widget.totalPrice}.00',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 48,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                    height:
+                        50), // Added spacing between total price and indicator
+                if (_isLoading) CircularProgressIndicator(),
+                SizedBox(
+                    height: 20), // Added spacing between indicator and text
+                BreathingCircle(), // Breathing circle widget
+                SizedBox(height: 40), // Added spacing at the bottom
+                Text(
+                  'Place Card on the Reader',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 20), // Added more spacing before buttons
+
+                // Row containing the buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white),
+                        side: MaterialStateProperty.all<BorderSide>(
+                          BorderSide(
+                            color: Color(0xFF0671E0),
+                          ),
+                        ),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        minimumSize: MaterialStateProperty.all<Size>(Size(
+                            150, 40)), // Set minimumSize for width and height
+                      ),
+                      child: Text(
+                        'Edit Order',
+                        style: TextStyle(
+                          color: Color(0xFF0671E0),
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 20), // Increased spacing between buttons
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OrderScreen(),
+                          ),
+                        );
+                      },
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Color(0xFFEEF5FC)),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        minimumSize: MaterialStateProperty.all<Size>(Size(
+                            150, 40)), // Set minimumSize for width and height
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Color(0xFF0671E0),
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Navigation(),
     );
