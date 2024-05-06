@@ -72,14 +72,30 @@ class _AddProductScreenState extends State<AddProductScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product added successfully')),
+          const SnackBar(
+            content: Text(
+              'Product added successfully',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
         );
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => MenuScreen()));
       } catch (e) {
         print('Error adding product: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding product: $e')),
+          SnackBar(
+            content: Text(
+              'Error adding product: $e',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
         );
       }
     }
@@ -151,7 +167,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontFamily: 'Poppins',
+                        fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
                         height: 0.08,
                       ),
@@ -237,7 +253,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontFamily: 'Poppins',
+                        fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
                         height: 1.2,
                       ),
