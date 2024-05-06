@@ -126,15 +126,34 @@ class _CashOutScreenState extends State<CashOutScreen> {
 
       print('Amount deducted: $amount, Updated balance: $updatedBalance');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Amount deducted: $amount'),
+        backgroundColor:
+            Color(0xFF0671E0), // Background color set to 0xFF0671E0
+        content: Text(
+          'Amount deducted: PHP $amount.00',
+          style: TextStyle(
+              color: Colors.white, // Font color set to white
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.bold // Font family set to Inter
+              ),
+        ),
       ));
 
       return updatedBalance;
     } catch (e) {
       print('Error deducting amount: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error deducting amount. Please try again.'),
+        backgroundColor:
+            Color(0xFF0671E0), // Background color set to 0xFF0671E0
+        content: Text(
+          'Error deducting amount. Please try again.',
+          style: TextStyle(
+              color: Colors.white, // Font color set to white
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.bold // Font family set to Inter
+              ),
+        ),
       ));
+
       return 0;
     }
   }
