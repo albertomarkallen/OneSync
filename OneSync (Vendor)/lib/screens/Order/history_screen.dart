@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:onesync/navigation.dart';
 
@@ -205,11 +206,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // SvgPicture.asset(
-                                          //   'assets/Receive.svg',
-                                          //   height: 39,
-                                          //   width: 39,
-                                          // ),
+                                          SvgPicture.asset(
+                                            'assets/Receive.svg',
+                                            height: 39,
+                                            width: 39,
+                                          ),
                                           const SizedBox(width: 8),
                                           Column(
                                             crossAxisAlignment:
@@ -502,5 +503,3 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 }
-
-class SvgPicture {}

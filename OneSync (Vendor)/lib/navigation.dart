@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:onesync/screens/Home/home_screen.dart';
 import 'package:onesync/screens/MenuList/menu_screen.dart';
 import 'package:onesync/screens/Order/history_screen.dart';
@@ -44,30 +45,75 @@ class _NavigationState extends State<Navigation> {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      items: const <BottomNavigationBarItem>[
+      key: ValueKey(_selectedIndex),
+      type: BottomNavigationBarType.fixed,
+      items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
+          icon: Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: SvgPicture.asset(
+              'assets/Dashboard_Nav.svg',
+              width: 24,
+              height: 24,
+              color: Color(0xFF717171),
+            ),
+          ),
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.menu, color: Color(0xFF717171)),
-          label: 'Menu',
+          icon: Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: SvgPicture.asset(
+              'assets/Menu_Nav.svg',
+              width: 24,
+              height: 24,
+              color: Color(0xFF717171),
+            ),
+          ),
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart, color: Color(0xFF717171)),
-          label: 'Order',
+          icon: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.blue,
+            ),
+            padding: EdgeInsets.all(10), // Padding inside the circle
+            child: Icon(
+              Icons.add,
+              size: 24,
+              color: Colors.white,
+            ),
+          ),
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.history, color: Color(0xFF717171)),
-          label: 'History',
+          icon: Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: SvgPicture.asset(
+              'assets/History_Nav.svg',
+              width: 24,
+              height: 24,
+              color: Color(0xFF717171),
+            ),
+          ),
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person, color: Color(0xFF717171)),
-          label: 'Profile',
+          icon: Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: SvgPicture.asset(
+              'assets/Profile_Nav.svg',
+              width: 24,
+              height: 24,
+              color: Color(0xFF717171),
+            ),
+          ),
+          label: '',
         ),
       ],
       currentIndex: _selectedIndex,
-      selectedItemColor: const Color.fromARGB(255, 133, 133, 133),
+      selectedItemColor: Color.fromARGB(255, 133, 133, 133),
       onTap: _onItemTapped,
     );
   }
