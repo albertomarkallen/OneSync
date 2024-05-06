@@ -335,7 +335,8 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  flex: 3,
+                  flex:
+                      4, // Increased from 3 to 5 to give more space to product names
                   child: Text(
                     productName,
                     style: TextStyle(
@@ -345,7 +346,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Expanded(
-                  flex: 5,
+                  flex:
+                      5, // Reduced from 5 to 3 to decrease the width of LinearProgressIndicator
                   child: LinearProgressIndicator(
                     value: stockPercentage,
                     backgroundColor: Colors.grey[300],
