@@ -121,6 +121,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a Product Name';
+                  }
+                  if (value.length < 2) {
+                    return 'Name must be at least 3 characters long';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 30.0),
               DropdownButtonFormField<String>(
@@ -269,12 +278,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
 // Helper method to build a number form field
   Widget _buildNumberFormField(TextEditingController controller, String label) {
+    // Function to capitalize the first letter of a string
+    String capitalizeFirstLetter(String text) {
+      if (text.isEmpty) return text;
+      return text[0].toUpperCase() + text.substring(1);
+    }
+
     return TextFormField(
       controller: controller,
-      decoration: InputDecoration(labelText: label),
+      decoration: InputDecoration(
+          labelText: capitalizeFirstLetter(
+              label)), // Capitalizing only the first letter of the label text
       keyboardType: TextInputType.number,
-      validator: (value) =>
-          value!.isEmpty ? 'Please enter a $label value' : null,
+      validator: (value) => value!.isEmpty
+          ? 'Please Enter a ${capitalizeFirstLetter(label)} value'
+          : null, // Capitalizing only the first letter in the error message
     );
   }
 }
