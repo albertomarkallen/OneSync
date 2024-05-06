@@ -109,7 +109,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     const Text('Total Price:',
                         style: TextStyle(color: Colors.black)),
-                    Text('₱${_selectedOrder!['totalPrice']}',
+                    Text(
+                        '₱${NumberFormat('#,##0').format(_selectedOrder!['totalPrice'])}',
                         style: TextStyle(color: Colors.blue)),
                   ],
                 ),
@@ -207,7 +208,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('₱${orderDoc.get('totalPrice')}',
+                  Text(
+                      '₱${NumberFormat('#,##0').format(orderDoc.get('totalPrice') as int)}',
                       style: TextStyle(
                           color: isCashIn
                               ? Colors.green

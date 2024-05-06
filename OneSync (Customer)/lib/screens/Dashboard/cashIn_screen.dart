@@ -1,4 +1,5 @@
 import 'dart:math'; // Import to generate random codes
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,10 +10,12 @@ class CashInScreen extends StatefulWidget {
 }
 
 class _CashInScreenState extends State<CashInScreen> {
-  TextEditingController _amountController = TextEditingController();
-  TextEditingController _codeController =
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _codeController =
       TextEditingController(); // Controller for the 6-digit code
   bool _showConfirmation = false;
+  bool _isCodeVisible = false;
+  bool _isbuttonPressed = false;
   String _confirmedAmount = '';
 
   // Generate a random 8-digit alphanumeric code
@@ -73,87 +76,110 @@ class _CashInScreenState extends State<CashInScreen> {
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
-            TextFormField(
-              controller: _codeController,
-              decoration: InputDecoration(
-                labelText: "Enter 6-Digit Code",
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue),
+            if (_isCodeVisible)
+              TextFormField(
+                controller: _codeController,
+                decoration: InputDecoration(
+                  labelText: "Enter 6-Digit Code",
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
                 ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  setState(() {
+                    _confirmedAmount = value;
+                    _showConfirmation = value.isNotEmpty;
+                    print('Code entered: $value'); // Debug output
+                    print(
+                        'Is code valid for submission? $_showConfirmation'); // Debug output
+                  });
+                },
               ),
-              keyboardType: TextInputType.number,
-            ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                bool isCodeValid = await _verifyCode(_codeController.text);
-                if (!isCodeValid) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Invalid Code Entered',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'Inter',
-                              fontSize: 16)),
-                      backgroundColor: Colors.blue,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
-                  return;
-                }
-                setState(() {
-                  _showConfirmation = true;
-                  _confirmedAmount = _amountController.text;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF0671E0), // Background color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8), // Rounded corners
+            if (!_isCodeVisible)
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isCodeVisible =
+                        true; // This will also hide the 'Send Code' button
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF0671E0), // Background color
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8), // Rounded corners
+                  ),
+                ),
+                child: Text(
+                  'Send Code',
+                  style: TextStyle(
+                      color: Colors.white, // Text color
+                      fontFamily: 'Inter' // Setting font family
+                      ),
                 ),
               ),
-              child: Text(
-                'Cash In',
-                style: TextStyle(
-                    color: Colors.white, // Text color
-                    fontFamily: 'Inter' // Setting font family
+            SizedBox(height: 20),
+            if (_isCodeVisible &&
+                _showConfirmation) // Only shown if conditions are met
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    int updatedBalance = await _deductAmountFromBalance(
+                        int.parse(_confirmedAmount));
+                    if (updatedBalance > 0) {
+                      await _storeCashOutTransaction(
+                          int.parse(_confirmedAmount));
+                      await _updateCodeAfterCashIn(); // Update the 6-digit code after successful transaction
+                      Navigator.pop(context,
+                          updatedBalance); // Return the updated balance
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Transaction successful, balance updated',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Inter',
+                                  fontSize: 16)),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Transaction failed, please try again',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Inter',
+                                  fontSize: 16)),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF0671E0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-              ),
-            ),
+                  ),
+                  child: Text(
+                    'Confirm',
+                    style: TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                  ),
+                ),
+              )
           ],
         ),
       ),
-      floatingActionButton: _showConfirmation
-          ? FloatingActionButton(
-              onPressed: () async {
-                int updatedBalance =
-                    await _deductAmountFromBalance(int.parse(_confirmedAmount));
-                if (updatedBalance > 0) {
-                  await _storeCashOutTransaction(int.parse(_confirmedAmount));
-                  await _updateCodeAfterCashIn(); // Update the 6-digit code after successful transaction
-                  Navigator.pop(
-                      context, updatedBalance); // Return the updated balance
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Transaction successful, balance updated',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'Inter',
-                              fontSize: 16)),
-                      backgroundColor: Colors.green,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
-                }
-              },
-              child: Icon(Icons.check),
-            )
-          : null,
     );
   }
 
