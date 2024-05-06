@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Dashboard/cashIn_screen.dart';
 import 'package:onesync/screens/Dashboard/history_screen.dart';
@@ -72,7 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (_isLoading) const CircularProgressIndicator(),
                 if (!_isLoading)
                   Text(
-                    'PHP $balance',
+                    'PHP ${NumberFormat("#,##0").format(balance)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 40,
