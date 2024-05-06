@@ -96,7 +96,8 @@ class _InventoryTrackerScreenState extends State<InventoryTrackerScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  flex: 3,
+                  flex:
+                      5, // Increased from 3 to 5 to give more space to product names
                   child: Text(
                     productName,
                     style: TextStyle(
@@ -105,8 +106,9 @@ class _InventoryTrackerScreenState extends State<InventoryTrackerScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                  flex: 5,
+                SizedBox(
+                  width:
+                      150, // Adjust the width of LinearProgressIndicator as needed
                   child: LinearProgressIndicator(
                     value: stockPercentage,
                     backgroundColor: Colors.grey[300],
