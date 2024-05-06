@@ -19,7 +19,6 @@ class SignUpStoreScreen extends StatefulWidget {
 
 class _SignUpStoreScreenState extends State<SignUpStoreScreen> {
   final TextEditingController _storenameController = TextEditingController();
-  final TextEditingController _rfidController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +70,6 @@ class _SignUpStoreScreenState extends State<SignUpStoreScreen> {
               SizedBox(height: 40),
               buildInputField("Store Name", _storenameController),
               const SizedBox(height: 20),
-              buildInputField("RFID ", _rfidController),
               SizedBox(height: 20),
               buildButton(context, "Finish Signing Up")
             ],
@@ -95,26 +93,39 @@ class _SignUpStoreScreenState extends State<SignUpStoreScreen> {
       ),
       child: TextButton(
         onPressed: () async {
+          // Trim whitespace and get the store name from the controller
           final String storeName = _storenameController.text.trim();
-          final String rfid = _rfidController.text.trim();
+
+          // Check if the store name field is empty
           if (storeName.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Please enter your store’s name')));
-          } else if (rfid.isEmpty) {
+            print("Store name is empty.");
             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please enter RFID')));
+              const SnackBar(content: Text('Please enter your store’s name')),
+            );
+            return;
+          }
+
+          // Attempt to create an account with email, password, and store name
+          User? user = await createAccountWithEmailPassword(
+            widget.email,
+            widget.password,
+            storeName,
+          );
+
+          if (user != null) {
+            // Account creation was successful, display a success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Sign up successful!')),
+            );
+            // Navigate to the welcome screen and remove all routes behind
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => WelcomeOneSyncScreen()),
+            );
           } else {
-            User? user = await createAccountWithEmailPassword(
-                widget.email, widget.password, storeName, rfid);
-            if (user != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Sign up successful!')));
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => WelcomeOneSyncScreen()));
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to create account')));
-            }
+            // Account creation failed, display an error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to create account')),
+            );
           }
         },
         style: TextButton.styleFrom(

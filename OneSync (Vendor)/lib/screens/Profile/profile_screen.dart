@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
+import 'package:onesync/screens/Profile/edit_RFID_screen.dart';
 import 'package:onesync/screens/Profile/edit_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -69,6 +70,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _handleChangeStoreProfile(BuildContext context) {
     Navigator.of(context).pushNamed('/editProfile');
+  }
+
+  void _handleInputRFID(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => EditRFIDScreen()),
+    );
   }
 
   void _handleChangePassword(BuildContext context) {
@@ -139,8 +146,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           ListTile(
                             leading: Icon(Icons.card_membership_outlined),
-                            title: Text(uid),
+                            title: uid.isEmpty
+                                ? Text('Please Enter Your RFID',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0671E0),
+                                    ))
+                                : Text(uid),
                             trailing: Icon(Icons.arrow_forward_ios),
+                            onTap: () => _handleInputRFID(context),
                           ),
                           ListTile(
                             leading: Icon(Icons.email),

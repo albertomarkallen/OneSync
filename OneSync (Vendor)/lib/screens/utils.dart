@@ -21,7 +21,10 @@ Future<User?> signInWithEmailPassword(String email, String password) async {
 }
 
 Future<User?> createAccountWithEmailPassword(
-    String email, String password, String storeName, String rfid) async {
+  String email,
+  String password,
+  String storeName,
+) async {
   try {
     final UserCredential userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -35,7 +38,6 @@ Future<User?> createAccountWithEmailPassword(
     await FirebaseFirestore.instance.collection('Menu').doc(userId).set({
       'email': email,
       'Vendor Name': storeName,
-      'UID': rfid,
     });
     return user;
   } catch (e) {
