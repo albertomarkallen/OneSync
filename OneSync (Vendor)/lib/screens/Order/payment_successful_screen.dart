@@ -9,7 +9,11 @@ class PaymentSuccessfulScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Payment Successful')),
+      appBar: AppBar(
+        title: const Text('Payment Successful'),
+        automaticallyImplyLeading:
+            false, // This prevents the back button from appearing
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
