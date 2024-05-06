@@ -43,7 +43,15 @@ class _InventoryTrackerScreenState extends State<InventoryTrackerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventory Tracker'),
+        title: Text(
+          'Inventory Tracker',
+          style: TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 28,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
