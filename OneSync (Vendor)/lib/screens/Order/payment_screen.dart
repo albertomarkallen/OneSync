@@ -76,7 +76,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       if (studentSnapshot.docs.isEmpty) {
         _updateStatus(2); // RFID not found in database
         _showMessageAndRedirect(
-            'Student with RFID not found. Please reload RFID.');
+            'Student with RFID not found. Please register RFID.');
         return;
       }
 
