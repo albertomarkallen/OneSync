@@ -236,8 +236,23 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       displayMessage = message;
       _isLoading = false;
     });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        message,
+        textAlign:
+            TextAlign.center, // Center align the text within the SnackBar
+        style: TextStyle(
+            fontSize: 16, // Optional: adjust the font size as needed
+            color: Colors.white // Optional: adjust the text color as needed
+            ),
+      ),
+      behavior:
+          SnackBarBehavior.floating, // Optional: make the SnackBar floating
+      margin: EdgeInsets.all(10), // Optional: adjust margin around the SnackBar
+      backgroundColor:
+          Colors.blue, // Optional: change background color of the SnackBar
+      duration: Duration(seconds: 5),
+    ));
     Timer(Duration(seconds: 5), () {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => OrderScreen()));
@@ -351,15 +366,23 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        // Update Status and Tapped to 0 before navigating away
+                        rfidRef.update({'Status': 0, 'Tapped': 0}).then((_) {
+                          // Navigate back or to the editing screen after updating
+                          Navigator.pop(context);
+                        }).catchError((error) {
+                          // Handle any errors here
+                          print("Error updating RFID settings: $error");
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  'Failed to reset RFID status. Please try again.')));
+                        });
                       },
                       style: ButtonStyle(
                         backgroundColor:
                             MaterialStateProperty.all<Color>(Colors.white),
                         side: MaterialStateProperty.all<BorderSide>(
-                          BorderSide(
-                            color: Color(0xFF0671E0),
-                          ),
+                          BorderSide(color: Color(0xFF0671E0)),
                         ),
                         shape:
                             MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -379,15 +402,26 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
                         ),
                       ),
                     ),
+
                     SizedBox(width: 20), // Increased spacing between buttons
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OrderScreen(),
-                          ),
-                        );
+                        // Update Status and Tapped to 0 before navigating away
+                        rfidRef.update({'Status': 0, 'Tapped': 0}).then((_) {
+                          // Navigate to the OrderScreen after updating
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OrderScreen(),
+                            ),
+                          );
+                        }).catchError((error) {
+                          // Handle any errors here
+                          print("Error updating RFID settings: $error");
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  'Failed to reset RFID status. Please try again.')));
+                        });
                       },
                       style: ButtonStyle(
                         backgroundColor:
