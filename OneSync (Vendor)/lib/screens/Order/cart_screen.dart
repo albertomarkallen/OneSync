@@ -63,10 +63,7 @@ class _CartScreenState extends State<CartScreen> {
     setState(() {
       if (widget.cart.containsKey(itemName) && widget.cart[itemName]! > 0) {
         widget.cart[itemName] = widget.cart[itemName]! - 1;
-        if (widget.cart[itemName] == 0) {
-          widget.cart
-              .remove(itemName); // Ensure the item is removed from the cart
-        }
+
         _updateTotalInFirebase();
         widget.onUpdateCart(widget.cart);
       }
