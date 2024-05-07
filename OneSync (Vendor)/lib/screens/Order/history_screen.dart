@@ -244,7 +244,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                             CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            '₱${orderDoc.get('totalPrice')}',
+                                            '${orderDoc.get('type') == 'cashout' ? '- ' : '+ '}₱${orderDoc.get('totalPrice')}',
                                             style: TextStyle(
                                               color: orderDoc.get('type') ==
                                                       'cashout'
