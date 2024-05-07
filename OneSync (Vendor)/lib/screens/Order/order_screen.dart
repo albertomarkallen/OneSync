@@ -503,27 +503,34 @@ class _OrderScreenState extends State<OrderScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: TextButton(
-              onPressed: () {
-                setState(() {
-                  cart.clear();
-                  items.forEach((item) => item.stock = 10);
-                });
-              },
+              onPressed: cart.isNotEmpty
+                  ? () {
+                      setState(() {
+                        cart.clear();
+                        items.forEach((item) => item.stock = 10);
+                      });
+                    }
+                  : null, // Disable the button when cart is empty
               style: TextButton.styleFrom(
                 foregroundColor: Color(0xFF0671E0),
-                padding: const EdgeInsets.all(
-                    0), // Remove padding as container has its own
+                padding: const EdgeInsets.all(0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                ), // Text color
+                ),
+                backgroundColor: cart.isNotEmpty
+                    ? null
+                    : Colors.grey[300], // Change background color when disabled
               ),
               child: Text(
                 'Clear',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w400,
-                ),
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    color: cart.isNotEmpty
+                        ? null
+                        : Colors.grey // Change text color when disabled
+                    ),
               ),
             ),
           ),

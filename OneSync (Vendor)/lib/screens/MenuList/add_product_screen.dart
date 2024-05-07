@@ -45,7 +45,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
       try {
         String userId = FirebaseAuth.instance.currentUser!.uid;
         String productName = _nameController.text;
-        String docId = productName;
 
         String? uploadedFilePath;
         if (_uploadedImageFile != null) {
@@ -58,12 +57,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 .getDownloadURL()
             : 'https://via.placeholder.com/150';
 
-        await FirebaseFirestore.instance
+        // Create a new document with an auto-generated ID
+        DocumentReference newMenuItem = FirebaseFirestore.instance
             .collection('Menu')
             .doc(userId)
             .collection('vendorProducts')
-            .doc(docId)
-            .set({
+            .doc(); // This will automatically generate a new ID
+
+        // Use the auto-generated ID if you need it elsewhere
+        String menuItemId = newMenuItem.id;
+
+        await newMenuItem.set({
           'name': productName,
           'category': _selectedCategory,
           'stock': int.parse(_stockController.text),
@@ -105,8 +109,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Product')),
-      body: Form(
+      appBar: AppBar(
+        title: Text(
+          'Add Product',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 18,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            height: 0.07,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+          child: Form(
         key: _formKey,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -117,43 +135,104 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 height: 48,
                 child: _uploadImage(),
               ),
-              const SizedBox(height: 44.0),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a Product Name';
-                  }
-                  if (value.length < 2) {
-                    return 'Name must be at least 3 characters long';
-                  }
-                  return null;
-                },
+              const SizedBox(height: 80.0),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 12),
+                  Text(
+                    'Product Name',
+                    textAlign:
+                        TextAlign.start, // Align text to the start (left)
+                    style: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    width: 345,
+                    height: 65,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey), // Grey border
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: TextFormField(
+                      controller: _nameController,
+                      textAlign: TextAlign.start,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter Product Name',
+                        hintStyle: TextStyle(
+                          color: Color(0xFF4D4D4D),
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a Product Name';
+                        }
+                        if (value.length < 3) {
+                          return 'Name must be at least 3 characters long';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 30.0),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                    _categoryController.text = newValue;
-                  });
-                },
-                items: categoriesList
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                decoration: InputDecoration(labelText: 'Category'),
+              SizedBox(
+                width: 345, // Adjust the width as needed
+                child: DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedCategory = newValue!;
+                      _categoryController.text = newValue;
+                    });
+                  },
+                  items: categoriesList
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        value,
+                        style: TextStyle(
+                          color: Color(0xFF212121),
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  decoration: InputDecoration(
+                    labelText: 'Product Category',
+                    labelStyle: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 30.0),
-              _buildNumberFormField(_stockController, 'Stock'),
-              const SizedBox(height: 30.0),
+              const SizedBox(height: 12.0),
+              _buildNumberFormField(_stockController, 'Product Stock'),
+              const SizedBox(height: 12.0),
               _buildNumberFormField(_priceController, 'Price'),
-              const SizedBox(height: 30.0),
+              const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () => _addProduct(context),
                 style: ElevatedButton.styleFrom(
@@ -187,7 +266,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ],
           ),
         ),
-      ),
+      )),
       bottomNavigationBar: const Navigation(),
     );
   }
@@ -278,21 +357,54 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
 // Helper method to build a number form field
   Widget _buildNumberFormField(TextEditingController controller, String label) {
-    // Function to capitalize the first letter of a string
     String capitalizeFirstLetter(String text) {
       if (text.isEmpty) return text;
       return text[0].toUpperCase() + text.substring(1);
     }
 
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-          labelText: capitalizeFirstLetter(
-              label)), // Capitalizing only the first letter of the label text
-      keyboardType: TextInputType.number,
-      validator: (value) => value!.isEmpty
-          ? 'Please Enter a ${capitalizeFirstLetter(label)} value'
-          : null, // Capitalizing only the first letter in the error message
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          capitalizeFirstLetter(label),
+          textAlign: TextAlign.start,
+          style: TextStyle(
+            color: Color(0xFF212121),
+            fontSize: 14,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        SizedBox(height: 12),
+        Container(
+          width: 345,
+          height: 65,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: TextFormField(
+            controller: controller,
+            textAlign: TextAlign.start,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: 'Enter ${capitalizeFirstLetter(label)}',
+              hintStyle: TextStyle(
+                color: Color(0xFF4D4D4D),
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            validator: (value) => value!.isEmpty
+                ? 'Please Enter a ${capitalizeFirstLetter(label)} value'
+                : null,
+          ),
+        ),
+      ],
     );
   }
 }

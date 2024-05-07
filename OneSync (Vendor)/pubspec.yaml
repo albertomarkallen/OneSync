@@ -51,6 +51,7 @@ dependencies:
   provider: ^6.1.2
   flutter_svg: ^2.0.10+1
   syncfusion_flutter_core: ^25.1.42
+  uuid: ^4.4.0
 
 
 dev_dependencies:

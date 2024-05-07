@@ -172,10 +172,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              'PHP ${NumberFormat('#,##0').format(_balance)}', // Using NumberFormat to format balance
+                              _balance < 0
+                                  ? 'PHP ${NumberFormat('#,##0').format(0)}'
+                                  : 'PHP ${NumberFormat('#,##0').format(_balance)}',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: 32.0,
+                                fontSize:
+                                    32.0, // Maintains the original font size for both conditions
                                 fontWeight: FontWeight.bold,
                                 color:
                                     Colors.white, // Set the text color to white

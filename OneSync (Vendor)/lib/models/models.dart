@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
 
 /// A class representing a menu item with details fetched from Firestore.
 class MenuItem {
+  String MenuItemId;
   String name;
   int price;
   int stock;
@@ -10,15 +12,14 @@ class MenuItem {
 
   /// Constructs a [MenuItem] with required fields and an optional image URL.
   MenuItem({
+    String? MenuItemId,
     required this.name,
     required this.price,
     required this.stock,
     required this.imageUrl,
     required this.category,
-  });
+  }) : MenuItemId = MenuItemId ?? Uuid().v4();
 
-  /// Creates an instance of [MenuItem] from a Firestore [DocumentSnapshot].
-  /// Fields are parsed and validated with fallbacks for missing data.
   factory MenuItem.fromSnapshot(DocumentSnapshot snapshot) {
     var data = snapshot.data() as Map<String, dynamic>?;
     if (data == null) {
@@ -26,6 +27,7 @@ class MenuItem {
     }
 
     return MenuItem(
+      MenuItemId: snapshot.id,
       name: data['name'] ?? 'No name provided',
       price: data['price'] != null ? (data['price'] as num).toInt() : 0,
       stock: data['stock'] != null ? (data['stock'] as num).toInt() : 0,

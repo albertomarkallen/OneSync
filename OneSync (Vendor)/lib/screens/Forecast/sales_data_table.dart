@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 
-import 'sales_dart.dart';
-import 'sales_predictor.dart';
-
 class SalesDataTable extends StatefulWidget {
   const SalesDataTable({super.key});
 
@@ -15,132 +12,152 @@ class SalesDataTable extends StatefulWidget {
 }
 
 class _SalesDataTableState extends State<SalesDataTable> {
-  final List<SalesData> _salesRecords = [];
-  final SalesPredictor _predictor = SalesPredictor();
-  String _selectedDateFilter = 'Weekly'; // Default filter
-  String _selectedMeal = 'All'; // Initially show all meals
-  List<String> _mealNames = ['All', 'Meal A', 'Meal B', 'Meal C', 'Meal D'];
-  final List<String> _dateFilters = ['Weekly', 'Monthly', 'Yearly'];
+  final List<SalesData> _actualSalesRecords = [];
+  final List<SalesData> _predictedSalesRecords = [];
+  String selectedName = 'All'; // To hold the selected meal name
+  final List<String> mealNames = [
+    'All',
+    'Java Rice',
+    'Javalong',
+    'Javagets',
+    'Javadog',
+    'Javaling',
+    'Javalog',
+    'Javamai',
+    'Sinigang w/ Rice',
+    'Adobo w/ Rice',
+    'Chicken Afritada w/ Rice',
+    'Menudo w/ Rice'
+  ];
 
   @override
   void initState() {
     super.initState();
-    _predictor.loadModel().then((_) {
-      _loadCSVData(); // Move this inside the callback to ensure the model is loaded
-    });
+    _loadCSVData();
   }
 
   void _loadCSVData() async {
-    final csvData =
+    final actualSalesCsvData =
         await rootBundle.loadString('assets/Meal_Orders_Transactions.csv');
-    List<List<dynamic>> csvTable = const CsvToListConverter().convert(csvData);
+    List<List<dynamic>> actualSalesTable =
+        const CsvToListConverter().convert(actualSalesCsvData);
+    _processCsvData(actualSalesTable, _actualSalesRecords);
 
-    _salesRecords.clear(); // Clear existing data
-    _mealNames = ['All']; // Reset meal names
+    final predictedSalesCsvData =
+        await rootBundle.loadString('assets/Meal_Orders_Transactions_2.csv');
+    List<List<dynamic>> predictedSalesTable =
+        const CsvToListConverter().convert(predictedSalesCsvData);
+    _processCsvData(predictedSalesTable, _predictedSalesRecords);
 
-    for (var row in csvTable.skip(1)) {
-      var rawDateTimeString = row[0].trim();
-      DateTime date = DateFormat("M/d/yyyy H:mm").parse(rawDateTimeString);
-      double actualSales = double.tryParse(row[2].toString()) ?? 0.0;
-      List<dynamic> mealNames =
-          row[1].split(',').map((name) => name.trim()).toList();
-      for (String mealName in mealNames) {
-        if (!_mealNames.contains(mealName)) {
-          _mealNames.add(mealName);
-        }
-        _salesRecords.add(SalesData(
-            date: date, actualSales: actualSales, mealName: mealName));
-      }
-    }
     setState(() {});
   }
 
-  List<LineChartBarData> _createChartBarData() {
-    Map<DateTime, double> dailyActual = {};
-    Map<DateTime, double> dailyPredicted = {};
+  void _processCsvData(
+      List<List<dynamic>> csvTable, List<SalesData> salesList) {
+    Map<DateTime, double> dateCounts = {};
 
-    Iterable<SalesData> filteredRecords = (_selectedMeal == 'All')
-        ? _salesRecords
-        : _salesRecords.where((record) => record.mealName == _selectedMeal);
-
-    for (var data in filteredRecords) {
-      DateTime day = DateTime(data.date.year, data.date.month, data.date.day);
-      dailyActual[day] = (dailyActual[day] ?? 0) + data.actualSales;
-      double predicted = _predictor.predictSales(day, dailyActual[day]!);
-      dailyPredicted[day] = predicted / 30;
+    for (var row in csvTable.skip(1)) {
+      if (selectedName == 'All' || row[1] == selectedName) {
+        try {
+          var rawDateTimeString = row[0].trim();
+          DateTime date = DateFormat("M/d/yyyy H:mm").parse(rawDateTimeString);
+          DateTime dateOnly = DateTime(date.year, date.month, date.day);
+          double orders = double.parse(
+              row[2].toString()); // Convert the number of orders to double
+          dateCounts[dateOnly] =
+              (dateCounts[dateOnly] ?? 0) + orders; // Sum orders per date
+        } catch (e) {
+          print("Error parsing row: $row, Error: $e");
+        }
+      }
     }
 
-    List<FlSpot> actualSpots = dailyActual.entries
-        .map((e) => FlSpot(e.key.millisecondsSinceEpoch.toDouble(), e.value))
-        .toList();
-    List<FlSpot> predictedSpots = dailyPredicted.entries
-        .map((e) => FlSpot(e.key.millisecondsSinceEpoch.toDouble(), e.value))
-        .toList();
-
-    return [
-      LineChartBarData(
-        spots: actualSpots,
-        isCurved: true,
-        color: Colors.red,
-        barWidth: 3,
-        isStrokeCapRound: true,
-        dotData: FlDotData(show: true),
-        belowBarData: BarAreaData(show: false),
-      ),
-      LineChartBarData(
-        spots: predictedSpots,
-        isCurved: true,
-        color: Colors.blue,
-        barWidth: 3,
-        isStrokeCapRound: true,
-        dotData: FlDotData(show: true),
-        belowBarData: BarAreaData(show: false),
-      )
-    ];
+    salesList.clear();
+    var sortedDates = dateCounts.keys.toList()..sort();
+    for (var date in sortedDates) {
+      salesList.add(SalesData(date: date, sales: dateCounts[date] ?? 0));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sales Data"),
-        actions: [
+        actions: <Widget>[
           DropdownButton<String>(
-            value: _selectedMeal,
-            onChanged: (newValue) {
+            value: selectedName,
+            icon: const Icon(Icons.arrow_downward),
+            onChanged: (String? newValue) {
               setState(() {
-                _selectedMeal = newValue ?? 'All';
+                selectedName = newValue!;
+                _loadCSVData(); // Reload data with the new filter
               });
             },
-            items: _mealNames.map((mealName) {
-              return DropdownMenuItem(value: mealName, child: Text(mealName));
-            }).toList(),
-          ),
-          DropdownButton<String>(
-            value: _selectedDateFilter,
-            onChanged: (newValue) {
-              setState(() {
-                _selectedDateFilter = newValue ?? 'Weekly';
-              });
-            },
-            items: _dateFilters.map((dateFilter) {
-              return DropdownMenuItem(
-                  value: dateFilter, child: Text(dateFilter));
+            items: mealNames.map<DropdownMenuItem<String>>((String name) {
+              return DropdownMenuItem<String>(
+                value: name,
+                child: Text(name),
+              );
             }).toList(),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: LineChart(LineChartData(
-          minY: 1, // Setting minimum y-axis value
-          maxY: 150, // Setting maximum y-axis value
-          gridData: FlGridData(show: true),
-          titlesData: FlTitlesData(show: true),
-          borderData: FlBorderData(show: true),
-          lineBarsData: _createChartBarData(),
-        )),
-      ),
+      body: LineChart(LineChartData(
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                return Text(DateFormat('MMM dd').format(date));
+              },
+            ),
+          ),
+          topTitles: AxisTitles(
+            sideTitles:
+                SideTitles(showTitles: false), // This hides the top titles
+          ),
+        ),
+        gridData: FlGridData(show: true),
+        borderData: FlBorderData(show: true),
+        minY: selectedName == 'All'
+            ? 1
+            : 1, // Default min Y for "All" or specific meal
+        maxY: selectedName == 'All'
+            ? 150
+            : 20, // Adjusted max Y for specific meal
+        lineBarsData: [
+          LineChartBarData(
+            spots: _actualSalesRecords
+                .map((data) => FlSpot(
+                    data.date.millisecondsSinceEpoch.toDouble(), data.sales))
+                .toList(),
+            isCurved: true,
+            color: Colors.red,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: true),
+          ),
+          LineChartBarData(
+            spots: _predictedSalesRecords
+                .map((data) => FlSpot(
+                    data.date.millisecondsSinceEpoch.toDouble(), data.sales))
+                .toList(),
+            isCurved: true,
+            color: Colors.blue,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: true),
+          )
+        ],
+      )),
     );
   }
+}
+
+class SalesData {
+  SalesData({required this.date, required this.sales});
+
+  final DateTime date;
+  final double sales;
 }

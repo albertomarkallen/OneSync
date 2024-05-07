@@ -29,6 +29,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   late TextEditingController _nameController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
+  final _formKey = GlobalKey<FormState>();
+  String _nameError = '';
+  String _priceError = '';
+  String _stockError = '';
+  String _categoryError = '';
 
   @override
   void initState() {
@@ -49,39 +54,45 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Future<void> _saveProductDetails() async {
-    String productName = widget.product.name;
-    String userID = FirebaseAuth.instance.currentUser!.uid;
+    if (_nameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Product name cannot be empty. Please enter a valid product name.')));
+      return;
+    }
 
+    String userId = FirebaseAuth.instance.currentUser!.uid;
     FirebaseFirestore db = FirebaseFirestore.instance;
+
     try {
-      var querySnapshot = await db
+      DocumentReference docRef = db
           .collection('Menu')
-          .doc(userID)
+          .doc(userId)
           .collection('vendorProducts')
-          .where('name', isEqualTo: productName)
-          .limit(1)
-          .get();
+          .doc(widget.product.MenuItemId);
 
-      if (querySnapshot.docs.isNotEmpty) {
-        var productDoc = querySnapshot.docs.first;
-        await productDoc.reference.update({
-          'name': _nameController.text,
-          'price': double.parse(_priceController.text),
-          'stock': int.parse(_stockController.text),
-          'category': _selectedCategory,
-        });
-
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Product details updated successfully!"),
-          backgroundColor: Colors.green,
-        ));
-      } else {
+      DocumentSnapshot docSnap = await docRef.get();
+      if (!docSnap.exists) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("No product found to update."),
           backgroundColor: Colors.red,
         ));
+        return; // Exit if no document found
       }
+
+      await docRef.update({
+        'name': _nameController.text,
+        'price': double.parse(_priceController.text),
+        'stock': int.parse(_stockController.text),
+        'category': _selectedCategory,
+        'imageUrl': widget.product.imageUrl
+      });
+
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Product details updated successfully!"),
+        backgroundColor: Colors.green,
+      ));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Failed to update product details: ${e.toString()}"),
@@ -91,33 +102,42 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Future<void> _saveProduct(BuildContext context) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    String productName = _nameController.text.trim();
+
+    if (productName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Product name cannot be empty. Please enter a valid product name.')),
+      );
+      return;
+    }
+
+    // Use a default image URL if none is provided
+    String imageUrl = widget.product.imageUrl.isNotEmpty
+        ? widget.product.imageUrl
+        : 'https://via.placeholder.com/150';
+
     try {
-      String userId = FirebaseAuth.instance.currentUser!.uid;
-      String productName = _nameController.text;
-
-      // Use a default image URL if none is provided
-      String imageUrl = widget.product.imageUrl.isNotEmpty
-          ? widget.product.imageUrl
-          : 'https://via.placeholder.com/150';
-
+      // Use the MenuItemId to identify the document to update
       await FirebaseFirestore.instance
           .collection('Menu')
           .doc(userId)
           .collection('vendorProducts')
-          .doc(productName) // Using product name as the document ID
-          .set({
-        'name': productName,
+          .doc(widget.product.MenuItemId)
+          .update({
+        'name': _nameController.text,
         'stock': int.parse(_stockController.text),
         'price': double.parse(_priceController.text),
-        'imageUrl': imageUrl, // Set the image URL to either provided or default
-        'category': _selectedCategory, // Include the category
+        'imageUrl': imageUrl,
+        'category': _selectedCategory,
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Product added successfully')),
       );
 
-      // Navigate to the MenuScreen
+      // Navigate to the MenuScreen only after successful save
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => MenuScreen()));
     } catch (e) {
@@ -205,266 +225,327 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (widget
-                .product.imageUrl.isNotEmpty) // Check if imageUrl is not empty
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  Image.network(
-                    widget.product.imageUrl,
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+      body: Form(
+        // Wrap your body with a Form widget
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.product.imageUrl
+                  .isNotEmpty) // Check if imageUrl is not empty
+                Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    Image.network(
+                      widget.product.imageUrl,
+                      width: MediaQuery.of(context).size.width,
                       height: MediaQuery.of(context).size.height * 0.3,
-                      width: double.infinity,
-                      color: Colors.grey[200],
-                      child: Icon(Icons.broken_image, size: 48),
-                    ),
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
                         height: MediaQuery.of(context).size.height * 0.3,
                         width: double.infinity,
                         color: Colors.grey[200],
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
+                        child: Icon(Icons.broken_image, size: 48),
+                      ),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          height: MediaQuery.of(context).size.height * 0.3,
+                          width: double.infinity,
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          widget.product.imageUrl = "";
+                        });
+                        // Optionally, delete the image from storage here
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.close, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              if (widget.product.imageUrl.isEmpty)
+                Center(
+                  child: Container(
+                    width: 200,
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: ShapeDecoration(
+                      color: const Color(0xFF0671E0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: InkWell(
+                      onTap: () async {
+                        File? selectedImage =
+                            await getImageFromGallery(context);
+                        if (selectedImage != null) {
+                          try {
+                            String? uploadedFilePath =
+                                await uploadFileForUser(selectedImage);
+                            if (uploadedFilePath == null) {
+                              throw Exception("File upload failed.");
+                            }
+
+                            String imageUrl = await FirebaseStorage.instance
+                                .ref(uploadedFilePath)
+                                .getDownloadURL();
+                            if (imageUrl.isEmpty) {
+                              throw Exception("Failed to get image URL");
+                            }
+
+                            setState(() {
+                              widget.product.imageUrl =
+                                  imageUrl; // Update the image URL in your product model
+                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Error handling image: $e')),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('No image selected')),
+                          );
+                        }
+                      },
+                      child: const Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Icon(Icons.add, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Upload Image',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w500,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 20.0),
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Product Name',
+                      style: TextStyle(
+                        color: Color(0xFF212121),
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        // Regular border
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: _nameError.isEmpty
+                                ? Color(0xFF4D4D4D)
+                                : Colors
+                                    .red, // Grey when no error, red when error
                           ),
                         ),
-                      );
-                    },
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        widget.product.imageUrl = ""; // Clear the image URL
-                      });
-                      // Optionally, delete the image from storage here
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
+                        // Border shown only when the TextFormField is focused
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: _nameError.isEmpty
+                                ? Colors.blue
+                                : Colors
+                                    .red, // Blue when no error, red when error
+                          ),
+                        ),
+                        // Border shown when an error exists
+                        errorBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors
+                                  .red), // Always red when there's an error
+                        ),
+                        // Border to use when the field is being interacted with and there's an error
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors
+                                  .red), // Red when focused and error exists
+                        ),
+                        errorText: _nameError.isEmpty ? null : _nameError,
                       ),
-                      child: Icon(Icons.close, color: Colors.white),
+                      style: TextStyle(
+                        color: Color(0xFF4D4D4D),
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      onChanged: (value) {
+                        _validateProduct();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20.0),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Food Category',
+                    style: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    width: 345,
+                    height: 45,
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedCategory = newValue!;
+                        });
+                      },
+                      items: categoriesList
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      decoration: InputDecoration(
+                        fillColor: Color(0xFF4D4D4D),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: _categoryError.isEmpty
+                                ? Color(0xFF4D4D4D)
+                                : Colors
+                                    .red, // Change border color based on error
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: _categoryError.isEmpty
+                                ? Colors.blue
+                                : Colors
+                                    .red, // Change focused border color based on error
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      style: TextStyle(
+                        color: Color(0xFF4D4D4D),
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                      ),
+                      dropdownColor: Colors.white,
+                      iconSize: 24,
+                      isExpanded: true,
                     ),
                   ),
                 ],
               ),
-            if (widget.product.imageUrl.isEmpty) // Check if imageUrl is empty
-              Center(
-                child: Container(
-                  width: 200,
-                  height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF0671E0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: InkWell(
-                    onTap: () async {
-                      File? selectedImage = await getImageFromGallery(context);
-                      if (selectedImage != null) {
-                        try {
-                          String? uploadedFilePath =
-                              await uploadFileForUser(selectedImage);
-                          if (uploadedFilePath == null) {
-                            throw Exception("File upload failed.");
-                          }
-
-                          String imageUrl = await FirebaseStorage.instance
-                              .ref(uploadedFilePath)
-                              .getDownloadURL();
-                          if (imageUrl.isEmpty) {
-                            throw Exception("Failed to get image URL");
-                          }
-
-                          setState(() {
-                            widget.product.imageUrl =
-                                imageUrl; // Update the image URL in your product model
-                          });
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error handling image: $e')),
-                          );
-                        }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('No image selected')),
-                        );
-                      }
-                    },
-                    child: const Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Icon(Icons.add, color: Colors.white),
-                          SizedBox(width: 4),
-                          Text(
-                            'Upload Image',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 20.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Product Name',
-                  style: TextStyle(
-                    color: Color(0xFF212121),
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Container(
-                  width: 345,
-                  height: 45,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  alignment: Alignment
-                      .center, // Center the content inside the Container
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0x3FABBED1)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none, // Remove the default border
-                    ),
+              const SizedBox(height: 20.0),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Product Price',
                     style: TextStyle(
-                      color: Color(0xFF4D4D4D),
-                      fontSize: 16,
+                      color: Color(0xFF212121),
+                      fontSize: 14,
                       fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Food Category',
-                  style: TextStyle(
-                    color: Color(0xFF212121),
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Container(
-                  width: 345,
-                  height: 45,
-                  alignment: Alignment.center,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0x3FABBED1)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedCategory = newValue!;
-                      });
-                    },
-                    items: categoriesList
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide
-                            .none, // Ensures no visible border around the dropdown
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10), // Adjusted padding
-                    ),
-                    style: TextStyle(
-                      color: Color(0xFF4D4D4D),
-                      fontSize: 16,
-                      fontFamily: 'Poppins',
-                    ),
-                    dropdownColor: Colors.white,
-                    iconSize: 24,
-                    isExpanded:
-                        true, // Ensures the dropdown fills the width of its parent container
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Product Price',
-                  style: TextStyle(
-                    color: Color(0xFF212121),
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Container(
-                  width: 345,
-                  height: 45,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  alignment: Alignment
-                      .center, // Center the content inside the Container
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0x3FABBED1)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: TextFormField(
+                  SizedBox(height: 8),
+                  TextFormField(
                     controller: _priceController,
                     decoration: InputDecoration(
-                      border: InputBorder.none, // Remove the default border
+                      // Regular border
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: _priceError.isEmpty
+                              ? Colors.grey
+                              : Colors
+                                  .red, // Grey when no error, red when error
+                        ),
+                      ),
+                      // Border shown only when the TextFormField is focused
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: _priceError.isEmpty
+                              ? Colors.blue
+                              : Colors
+                                  .red, // Blue when no error, red when error
+                        ),
+                      ),
+                      // Border shown when an error exists
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color:
+                                Colors.red), // Always red when there's an error
+                      ),
+                      // Border to use when the field is being interacted with and there's an error
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Colors
+                                .red), // Red when focused and error exists
+                      ),
+                      errorText: _priceError.isEmpty ? null : _priceError,
                     ),
                     style: TextStyle(
                       color: Color(0xFF4D4D4D),
@@ -472,43 +553,61 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w400,
                     ),
+                    keyboardType: TextInputType.numberWithOptions(
+                        decimal: true), // Support decimal numbers
+                    onChanged: (value) {
+                      _validateProduct(); // Call validation on change
+                    },
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Stock',
-                  style: TextStyle(
-                    color: Color(0xFF212121),
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                    height: 0.12,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Container(
-                  width: 345,
-                  height: 45,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  alignment: Alignment
-                      .center, // Center the content inside the Container
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0x3FABBED1)),
-                      borderRadius: BorderRadius.circular(8),
+                ],
+              ),
+              const SizedBox(height: 20.0),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Stock',
+                    style: TextStyle(
+                      color: Color(0xFF212121),
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  child: TextFormField(
+                  SizedBox(height: 8),
+                  TextFormField(
                     controller: _stockController,
                     decoration: InputDecoration(
-                      border: InputBorder.none, // Remove the default border
+                      // Regular border
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: _stockError.isEmpty
+                              ? Color(0x3FABBED1)
+                              : Colors.red,
+                        ),
+                      ),
+                      // Border shown only when the TextFormField is focused
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: _stockError.isEmpty
+                              ? Colors.blue
+                              : Colors
+                                  .red, // Blue when no error, red when error
+                        ),
+                      ),
+                      // Border shown when an error exists
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color:
+                                Colors.red), // Always red when there's an error
+                      ),
+                      // Border to use when the field is being interacted with and there's an error
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Colors
+                                .red), // Red when focused and error exists
+                      ),
+                      errorText: _stockError.isEmpty ? null : _stockError,
                     ),
                     style: TextStyle(
                       color: Color(0xFF4D4D4D),
@@ -516,11 +615,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w400,
                     ),
+                    keyboardType: TextInputType.number, // Ensure numeric input
+                    onChanged: (value) {
+                      _validateProduct(); // Call validation on change
+                    },
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomAppBar(
@@ -530,14 +633,52 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           children: [
             ElevatedButton(
               onPressed: () {
-                _saveProduct(context).then((_) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => const MenuScreen()),
-                  );
-                }).catchError((error) {
-                  // Handle any errors here if needed
-                  print("Failed to save product: $error");
-                });
+                _validateProduct(); // Trigger validation for all inputs
+
+                // Check if all inputs are valid
+                if (_formKey.currentState!.validate() &&
+                    _nameError.isEmpty &&
+                    _stockError.isEmpty &&
+                    _priceError.isEmpty &&
+                    _categoryError.isEmpty) {
+                  _saveProduct(context).then((_) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                          builder: (context) => const MenuScreen()),
+                    );
+                  }).catchError((error) {
+                    // Handle errors during the save operation
+                    print("Failed to save product: $error");
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Failed to save product: $error")));
+                  });
+                } else {
+                  // Handle form validation errors
+                  if (_nameError.isNotEmpty) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(_nameError)));
+                  }
+                  if (_stockError.isNotEmpty) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(_stockError)));
+                  }
+                  if (_priceError.isNotEmpty) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(_priceError)));
+                  }
+                  if (_categoryError.isNotEmpty) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(_categoryError)));
+                  }
+                  if (_nameError.isEmpty &&
+                      _stockError.isEmpty &&
+                      _priceError.isEmpty &&
+                      _categoryError.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content:
+                            Text("Please correct the errors before saving.")));
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF0671E0),
@@ -580,25 +721,94 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
+  void _validateProduct() {
+    setState(() {
+      // Validate product name
+      _nameError = _nameController.text.trim().isEmpty
+          ? 'Product name cannot be empty.'
+          : '';
+
+      // Validate stock
+      int? stockValue = int.tryParse(_stockController.text.trim());
+      if (stockValue == null) {
+        _stockError = 'Stock Must be a Number.';
+      } else if (stockValue < 0) {
+        _stockError = 'Stock Cannot be Negative.';
+      } else {
+        _stockError = '';
+      }
+
+      // Validate price
+      double? priceValue = double.tryParse(_priceController.text.trim());
+      if (priceValue == null) {
+        _priceError = 'Price must be a number.';
+      } else if (priceValue < 0) {
+        _priceError = 'Price cannot be negative.';
+      } else {
+        _priceError = '';
+      }
+    });
+  }
+
   void _showDeleteConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Product', style: TextStyle(fontFamily: 'Inter')),
-        content:
-            Text('Are you sure you want to delete ${widget.product.name}?'),
+        backgroundColor: Colors.white,
+        title: Text(
+          'Delete Product',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete ${widget.product.name}?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: TextStyle(fontFamily: 'Inter')),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFF0671E0),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              minimumSize: Size(100, 40),
+            ),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+              ),
+            ),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () {
               _deleteProduct();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFD9544D)),
-            child: Text('Delete',
-                style: TextStyle(fontFamily: 'Inter', color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFFD9544D),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              minimumSize: Size(100, 40),
+            ),
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Poppins',
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
