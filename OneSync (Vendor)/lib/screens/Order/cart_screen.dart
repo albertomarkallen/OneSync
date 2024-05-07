@@ -7,8 +7,13 @@ import 'package:onesync/screens/Order/payment_screen.dart';
 class CartScreen extends StatefulWidget {
   final Map<String, int> cart;
   final List<Map<String, dynamic>> items;
+  final Function(Map<String, int>) onUpdateCart;
 
-  const CartScreen({super.key, required this.cart, required this.items});
+  const CartScreen(
+      {super.key,
+      required this.cart,
+      required this.items,
+      required this.onUpdateCart});
 
   @override
   _CartScreenState createState() => _CartScreenState();
@@ -40,6 +45,7 @@ class _CartScreenState extends State<CartScreen> {
         if (currentQuantity < availableStock) {
           widget.cart[itemName] = currentQuantity + 1;
           _updateTotalInFirebase();
+          widget.onUpdateCart(widget.cart);
         } else {
           // Show a snackbar or dialog indicating that the stock is insufficient
           ScaffoldMessenger.of(context).showSnackBar(
@@ -57,15 +63,22 @@ class _CartScreenState extends State<CartScreen> {
     setState(() {
       if (widget.cart.containsKey(itemName) && widget.cart[itemName]! > 0) {
         widget.cart[itemName] = widget.cart[itemName]! - 1;
+        if (widget.cart[itemName] == 0) {
+          widget.cart
+              .remove(itemName); // Ensure the item is removed from the cart
+        }
         _updateTotalInFirebase();
+        widget.onUpdateCart(widget.cart);
       }
     });
   }
 
   Widget _buildCheckoutButton(BuildContext context) {
-    int totalItems = widget.cart.values
-        .fold(0, (previousValue, quantity) => previousValue + quantity);
+    int totalItems =
+        widget.cart.values.fold(0, (prev, quantity) => prev + quantity);
     num totalPrice = _calculateTotal();
+    // Determine the correct singular or plural form of "Item"
+    String itemText = totalItems == 1 ? 'Item' : 'Items';
 
     return totalItems > 0
         ? Container(
@@ -76,13 +89,27 @@ class _CartScreenState extends State<CartScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Total: ₱$totalPrice',
-                    style: const TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$totalItems $itemText', // Use the correct singular or plural form
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Total: ₱$totalPrice',
+                        style: TextStyle(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                   ElevatedButton(
                     onPressed: () => _goToWaitForRfid(context),

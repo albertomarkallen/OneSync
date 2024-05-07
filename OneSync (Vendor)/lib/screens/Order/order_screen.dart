@@ -119,6 +119,7 @@ class _OrderScreenState extends State<OrderScreen> {
       setState(() {
         cart[item.name] = (cart[item.name] ?? 0) + 1;
         item.stock--;
+        _updateTotalInFirebase(); // Update total when an item is added.
       });
     }
   }
@@ -126,27 +127,43 @@ class _OrderScreenState extends State<OrderScreen> {
   void _removeFromCart(MenuItem item) {
     if (cart[item.name]! > 0) {
       setState(() {
-        cart[item.name] = (cart[item.name] ?? 0) - 1;
+        cart[item.name] = cart[item.name]! - 1;
         if (cart[item.name] == 0) {
           cart.remove(item.name);
         }
         item.stock++;
+        _updateTotalInFirebase(); // Update total when an item is removed.
       });
     }
   }
 
   int _calculateTotal() {
-    int total = cart.entries
-        .map((entry) =>
-            items.firstWhere((item) => item.name == entry.key).price *
-            entry.value)
-        .reduce((value, element) => value + element);
+    int total = 0;
+    if (cart.isNotEmpty) {
+      total = cart.entries
+          .map((entry) =>
+              items.firstWhere((item) => item.name == entry.key).price *
+              entry.value)
+          .reduce((value, element) => value + element);
+    }
 
     // Update the "Total" value in Realtime Database
     DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
     databaseReference.child('RFID').update({'Total': total});
 
     return total;
+  }
+
+  void _updateTotalInFirebase() {
+    int total =
+        _calculateTotal(); // This method calculates the total price based on the cart.
+
+    DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
+    databaseReference.child('RFID').update({'Total': total}).then((_) {
+      print("Total updated to: $total");
+    }).catchError((error) {
+      print("Failed to update total: $error");
+    });
   }
 
   Widget _buildFilterCategory() {
@@ -401,6 +418,10 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget _buildTotalDisplay() {
     int totalItems = cart.values
         .fold(0, (previousValue, quantity) => previousValue + quantity);
+    String itemText = totalItems == 1
+        ? 'Item'
+        : 'Items'; // Correctly use singular or plural form
+
     return totalItems > 0
         ? Container(
             color: Color(0xFF0671E0),
@@ -414,7 +435,7 @@ class _OrderScreenState extends State<OrderScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$totalItems Items',
+                        '$totalItems $itemText', // Use the variable for singular/plural form
                         style: TextStyle(
                           fontSize: 14.0,
                           fontWeight: FontWeight.w500,
@@ -437,23 +458,27 @@ class _OrderScreenState extends State<OrderScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => CartScreen(
-                            cart: cart,
-                            items: items
-                                .map((item) => {
-                                      'name': item.name,
-                                      'price': item.price,
-                                      'stock': item.stock,
-                                      'imageUrl': item.imageUrl,
-                                      'category': item.category
-                                    })
-                                .toList(),
-                          ),
+                              cart: cart,
+                              items: items
+                                  .map((item) => {
+                                        'name': item.name,
+                                        'price': item.price,
+                                        'stock': item.stock,
+                                        'imageUrl': item.imageUrl,
+                                        'category': item.category
+                                      })
+                                  .toList(),
+                              onUpdateCart: (Map<String, int> updatedCart) {
+                                setState(() {
+                                  cart = updatedCart;
+                                });
+                              }),
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.blue[800],
-                      backgroundColor: Colors.white, // Button color
+                      backgroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
@@ -463,8 +488,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       children: [
                         Text(
                           'View Order',
-                          style:
-                              TextStyle(color: Colors.blue[800]), // Text color
+                          style: TextStyle(color: Colors.blue[800]),
                         ),
                         Icon(
                           Icons.arrow_right_alt,
@@ -494,46 +518,42 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
         ),
         actions: <Widget>[
-          Container(
-            width: 70,
-            height: 32,
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Color(0xFFEEF5FC),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextButton(
-              onPressed: cart.isNotEmpty
-                  ? () {
-                      setState(() {
-                        cart.clear();
-                        items.forEach((item) => item.stock = 10);
-                      });
-                    }
-                  : null, // Disable the button when cart is empty
-              style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF0671E0),
-                padding: const EdgeInsets.all(0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                backgroundColor: cart.isNotEmpty
-                    ? null
-                    : Colors.grey[300], // Change background color when disabled
+          if (cart.isNotEmpty) // Check if the cart is not empty
+            Container(
+              width: 70,
+              height: 32,
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Color(0xFFEEF5FC),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                'Clear',
-                style: TextStyle(
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    cart.clear();
+                    items.forEach((item) =>
+                        item.stock = 10); // Reset stock for demonstration
+                    _updateTotalInFirebase(); // Update total when the cart is cleared.
+                  });
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Color(0xFF0671E0),
+                  padding: const EdgeInsets.all(
+                      0), // Remove padding as container has its own
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Clear',
+                  style: TextStyle(
                     fontSize: 14,
                     fontFamily: 'Poppins',
                     fontWeight: FontWeight.w400,
-                    color: cart.isNotEmpty
-                        ? null
-                        : Colors.grey // Change text color when disabled
-                    ),
+                  ),
+                ),
               ),
             ),
-          ),
         ],
       ),
       body: Column(
