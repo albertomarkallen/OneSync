@@ -134,7 +134,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       if (studentBalance < total) {
         _updateStatus(1); // Insufficient balance
         _showMessageAndRedirect('Insufficient balance. Please reload RFID.');
-        Timer(Duration(seconds: 3), () {
+        Timer(Duration(seconds: 2), () {
           _clearRealtimeDatabaseValues();
         });
         return;
@@ -201,7 +201,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
               builder: (context) =>
                   PaymentSuccessfulScreen(totalPrice: widget.totalPrice)));
 
-      Timer(Duration(seconds: 5), () {
+      Timer(Duration(seconds: 2), () {
         _clearRealtimeDatabaseValues();
       });
     } catch (e) {
@@ -251,9 +251,9 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
       margin: EdgeInsets.all(10), // Optional: adjust margin around the SnackBar
       backgroundColor:
           Colors.blue, // Optional: change background color of the SnackBar
-      duration: Duration(seconds: 5),
+      duration: Duration(seconds: 2),
     ));
-    Timer(Duration(seconds: 5), () {
+    Timer(Duration(seconds: 2), () {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => OrderScreen()));
       _clearRealtimeDatabaseValues();
@@ -261,7 +261,7 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
   }
 
   void _clearRealtimeDatabaseValues() {
-    Timer(Duration(seconds: 5), () {
+    Timer(Duration(seconds: 2), () {
       rfidRef.update({'Status': 0, 'Tapped': 0, 'Total': 0, 'UID': ''});
     });
   }
@@ -407,7 +407,12 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
                     ElevatedButton(
                       onPressed: () {
                         // Update Status and Tapped to 0 before navigating away
-                        rfidRef.update({'Status': 0, 'Tapped': 0}).then((_) {
+                        rfidRef.update({
+                          'Status': 0,
+                          'Tapped': 0,
+                          'Total': 0,
+                          'UID': ''
+                        }).then((_) {
                           // Navigate to the OrderScreen after updating
                           Navigator.pushReplacement(
                             context,
