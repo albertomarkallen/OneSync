@@ -306,7 +306,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
         if (isNewType) {
           // UI for 'cashout' type transaction details
           return AlertDialog(
-            title: const Text('Cashout Details'),
+            title: const Text(
+              'Cashout Details',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF212121),
+                fontSize: 18,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
