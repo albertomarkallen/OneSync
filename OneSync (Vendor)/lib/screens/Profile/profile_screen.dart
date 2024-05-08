@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Profile/edit_RFID_screen.dart';
 import 'package:onesync/screens/Profile/edit_password_screen.dart';
+import 'package:onesync/screens/Profile/edit_storeName_screen.dart';
 import 'package:onesync/screens/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -253,6 +254,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _handleChangeStoreName(BuildContext context) {
+    // Navigate to the EditStoreNameScreen
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => EditStoreNameScreen()),
+    );
+  }
+
   Future<void> _signOut(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -349,11 +357,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: _displayImage(),
                       ),
                     ),
+                    SizedBox(height: 10),
+                    Text(
+                      vendorName,
+                      style: TextStyle(
+                        color: Color(0xFF212121),
+                        fontSize: 20,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Store Name',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFF717171),
+                        fontSize: 12,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                        height: 0.11,
+                      ),
+                    ),
                     SizedBox(height: 20),
                     ListView(
                       shrinkWrap:
                           true, // Ensures the ListView takes minimum space
                       children: [
+                        ListTile(
+                          leading: Icon(Icons.storefront_outlined),
+                          title: Text(vendorName),
+                          trailing: Icon(Icons.arrow_forward_ios),
+                          onTap: () => _handleChangeStoreName(context),
+                        ),
                         ListTile(
                           leading: Icon(Icons.card_membership_outlined),
                           title: uid.isEmpty
