@@ -17,11 +17,22 @@ class _SalesDataTableState extends State<SalesDataTable> {
   final SalesPredictor _predictor = SalesPredictor();
   String _selectedDateFilter = 'Weekly'; // Default filter is now 'Weekly'
   String _selectedMeal = 'All'; // Initially show all meals
-  List<String> _mealNames = ['All', 'Meal A', 'Meal B', 'Meal C', 'Meal D'];
+  List<String> _mealNames = [
+    'All',
+    'Java Rice',
+    'Javalong',
+    'Javagets',
+    'Javadog',
+    'Javaling',
+    'Javalog',
+    'Javamai',
+    'Sinigang w/ Rice',
+    'Adobo w/ Rice',
+    'Chicken Afritada w/ Rice',
+    'Menudo w/ Rice'
+  ];
   final List<String> _dateFilters = [
     'Weekly',
-    'Monthly',
-    'Yearly'
   ]; // Removed 'Daily' option
 
   @override
@@ -34,7 +45,7 @@ class _SalesDataTableState extends State<SalesDataTable> {
 
   void _loadCSVData() async {
     final csvData =
-        await rootBundle.loadString('assets/Meal_Orders_Transactions.csv');
+        await rootBundle.loadString('assets/Meal_Orders_Transactions.csv_2');
     List<List<dynamic>> csvTable = const CsvToListConverter().convert(csvData);
 
     _salesRecords.clear(); // Clear existing data

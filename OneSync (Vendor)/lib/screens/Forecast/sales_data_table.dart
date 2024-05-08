@@ -102,85 +102,55 @@ class _SalesDataTableState extends State<SalesDataTable> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: LineChart(LineChartData(
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final date =
-                          DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                      return Text(DateFormat('MMM dd').format(date));
-                    },
-                  ),
-                ),
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                      showTitles: false), // This hides the top titles
-                ),
-              ),
-              gridData: FlGridData(show: true),
-              borderData: FlBorderData(show: true),
-              minY: selectedName == 'All'
-                  ? 1
-                  : 1, // Default min Y for "All" or specific meal
-              maxY: selectedName == 'All'
-                  ? 150
-                  : 20, // Adjusted max Y for specific meal
-              lineBarsData: [
-                LineChartBarData(
-                  spots: _actualSalesRecords
-                      .map((data) => FlSpot(
-                          data.date.millisecondsSinceEpoch.toDouble(),
-                          data.sales))
-                      .toList(),
-                  isCurved: true,
-                  color: Colors.red,
-                  barWidth: 2,
-                  isStrokeCapRound: true,
-                  dotData: FlDotData(show: true),
-                ),
-                LineChartBarData(
-                  spots: _predictedSalesRecords
-                      .map((data) => FlSpot(
-                          data.date.millisecondsSinceEpoch.toDouble(),
-                          data.sales))
-                      .toList(),
-                  isCurved: true,
-                  color: Colors.blue,
-                  barWidth: 2,
-                  isStrokeCapRound: true,
-                  dotData: FlDotData(show: true),
-                )
-              ],
-            )),
-          ),
-          Container(
-            padding: EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildLegend(Color(0xFFD32F2F), "Actual Sales"),
-                SizedBox(width: 10),
-                _buildLegend(Color(0xFF1976D2), "Predicted Sales"),
-              ],
+      body: LineChart(LineChartData(
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                return Text(DateFormat('MMM dd').format(date));
+              },
             ),
           ),
+          topTitles: AxisTitles(
+            sideTitles:
+                SideTitles(showTitles: false), // This hides the top titles
+          ),
+        ),
+        gridData: FlGridData(show: true),
+        borderData: FlBorderData(show: true),
+        minY: selectedName == 'All'
+            ? 1
+            : 1, // Default min Y for "All" or specific meal
+        maxY: selectedName == 'All'
+            ? 150
+            : 20, // Adjusted max Y for specific meal
+        lineBarsData: [
+          LineChartBarData(
+            spots: _actualSalesRecords
+                .map((data) => FlSpot(
+                    data.date.millisecondsSinceEpoch.toDouble(), data.sales))
+                .toList(),
+            isCurved: true,
+            color: Colors.red,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: true),
+          ),
+          LineChartBarData(
+            spots: _predictedSalesRecords
+                .map((data) => FlSpot(
+                    data.date.millisecondsSinceEpoch.toDouble(), data.sales))
+                .toList(),
+            isCurved: true,
+            color: Colors.blue,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: true),
+          )
         ],
-      ),
-    );
-  }
-
-  Widget _buildLegend(Color color, String text) {
-    return Row(
-      children: [
-        Icon(Icons.stop, color: color),
-        SizedBox(width: 4),
-        Text(text),
-      ],
+      )),
     );
   }
 }
