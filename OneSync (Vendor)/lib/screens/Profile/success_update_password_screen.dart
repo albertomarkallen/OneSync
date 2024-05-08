@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Profile/profile_screen.dart';
@@ -9,6 +11,18 @@ class SuccessUpdatedPassword extends StatelessWidget {
     );
   }
 
+  Future<String> getImageUrl() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+    String filePath = 'profile/${user.uid}/profile_image.jpg';
+    return await FirebaseStorage.instance
+        .ref()
+        .child(filePath)
+        .getDownloadURL();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,10 +32,29 @@ class SuccessUpdatedPassword extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage:
-                  NetworkImage('https://via.placeholder.com/110x78'),
+            FutureBuilder(
+              future: getImageUrl(),
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey, // Placeholder while loading
+                  );
+                } else if (snapshot.hasError || !snapshot.hasData) {
+                  // If an error occurs or no data is found, show the default placeholder image
+                  return CircleAvatar(
+                    radius: 50,
+                    backgroundImage:
+                        NetworkImage('https://via.placeholder.com/110x78'),
+                  );
+                } else {
+                  // Data is available
+                  return CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage(snapshot.data!),
+                  );
+                }
+              },
             ),
             SizedBox(height: 20),
             Text(
