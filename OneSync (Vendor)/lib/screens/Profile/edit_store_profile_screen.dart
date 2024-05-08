@@ -33,15 +33,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         String userID = FirebaseAuth.instance.currentUser!.uid;
-        String storeName = _storeNameController.text;
+        String vendorName = _storeNameController.text; // Updated to vendorName
 
         var storeDocRef = FirebaseFirestore.instance
             .collection('Menu') // Main collection
             .doc(userID)
-            .collection('vendorProducts')
-            .doc(storeName);
+            .collection(userID)
+            .doc(vendorName);
 
-        Map<String, dynamic> dataToUpdate = {'name': storeName};
+        Map<String, dynamic> dataToUpdate = {
+          'Vendor Name': vendorName
+        }; // Updated to 'Vendor Name'
+
+        await storeDocRef.set(dataToUpdate);
 
         // Update the store's information
         await storeDocRef.set(dataToUpdate, SetOptions(merge: true));

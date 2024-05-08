@@ -1,30 +1,46 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
-import 'package:onesync/screens/Profile/success_update_password_screen.dart';
+import 'package:onesync/screens/Profile/success_update_password_screen%20copy.dart';
 import 'package:onesync/screens/utils.dart'; // Ensure this import is correct
 
-class EditPasswordScreen extends StatelessWidget {
+class EditPasswordScreen extends StatefulWidget {
+  @override
+  _EditPasswordScreenState createState() => _EditPasswordScreenState();
+}
+
+class _EditPasswordScreenState extends State<EditPasswordScreen> {
   final TextEditingController currentPasswordController =
       TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  bool _isCurrentPasswordValid = true;
+  bool _isNewPasswordValid = true;
+
   void _handleUpdatePass(BuildContext context) async {
     String currentPassword = currentPasswordController.text;
     String newPassword = newPasswordController.text;
     String confirmPassword = confirmPasswordController.text;
 
-    if (newPassword != confirmPassword) {
+    bool passwordsMatch = newPassword == confirmPassword;
+    bool isNewPasswordValid = newPassword.length >= 8;
+
+    // Update the validation state for new and confirm password fields
+    setState(() {
+      _isNewPasswordValid = passwordsMatch && isNewPasswordValid;
+    });
+
+    if (!passwordsMatch || !isNewPasswordValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('New Password and Confirm Password do not match')),
+            content: Text(
+                'Ensure the new password is at least 8 characters long and both passwords match.')),
       );
       return;
     }
 
-    // Attempt to reauthenticate before changing the password
     User? user = FirebaseAuth.instance.currentUser;
     String email = user!.email!;
 
@@ -33,12 +49,8 @@ class EditPasswordScreen extends StatelessWidget {
           EmailAuthProvider.credential(email: email, password: currentPassword);
       await user.reauthenticateWithCredential(credential);
 
-      // Use the utility function to change the password
       bool result = await changePassword(newPassword);
       if (result) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password successfully updated')),
-        );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => SuccessUpdatedPassword()),
         );
@@ -46,8 +58,14 @@ class EditPasswordScreen extends StatelessWidget {
         throw Exception('Failed to update password.');
       }
     } catch (e) {
+      setState(() {
+        _isCurrentPasswordValid =
+            false; // Assume reauthentication failed due to incorrect current password
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update password: $e')),
+        SnackBar(
+            content:
+                Text('Failed to reauthenticate. Check your current password.')),
       );
     }
   }
@@ -68,6 +86,7 @@ class EditPasswordScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: _isCurrentPasswordValid ? Colors.black : Colors.red,
               ),
             ),
             SizedBox(height: 10),
@@ -77,18 +96,21 @@ class EditPasswordScreen extends StatelessWidget {
               obscureText: true, // Hide password
               decoration: InputDecoration(
                 labelText: 'Enter Current Password',
-                floatingLabelBehavior:
-                    FloatingLabelBehavior.never, // Keep label in place
+                errorText: !_isCurrentPasswordValid
+                    ? 'Invalid current password'
+                    : null,
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: Color.fromRGBO(65, 150, 240,
-                          100)), // Set focused border color to blue
+                    color: _isCurrentPasswordValid
+                        ? Color.fromRGBO(65, 150, 240, 100)
+                        : Colors.red,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: Color.fromRGBO(171, 190, 209,
-                          25)), // Set enabled border color to blue
+                    color: _isCurrentPasswordValid ? Colors.grey : Colors.red,
+                  ),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                     vertical: 16, horizontal: 16), // Adjust padding
@@ -104,23 +126,23 @@ class EditPasswordScreen extends StatelessWidget {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: newPasswordController, // Use separate controller
-              keyboardType: TextInputType.text,
-              obscureText: true, // Hide password
+              controller: newPasswordController,
+              obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Enter New Password',
-                floatingLabelBehavior:
-                    FloatingLabelBehavior.never, // Keep label in place
+                errorText: !_isNewPasswordValid
+                    ? 'Password must be at least 8 characters and match confirmation.'
+                    : null,
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: Color.fromRGBO(65, 150, 240,
-                          100)), // Set focused border color to blue
+                      color: _isNewPasswordValid
+                          ? Color.fromRGBO(65, 150, 240, 100)
+                          : Colors.red),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: Color.fromRGBO(171, 190, 209,
-                          25)), // Set enabled border color to blue
+                      color: _isNewPasswordValid ? Colors.grey : Colors.red),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                     vertical: 16, horizontal: 16), // Adjust padding
@@ -141,18 +163,19 @@ class EditPasswordScreen extends StatelessWidget {
               obscureText: true, // Hide password
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
-                floatingLabelBehavior:
-                    FloatingLabelBehavior.never, // Keep label in place
+                errorText: !_isNewPasswordValid
+                    ? 'Passwords must match and be at least 8 characters.'
+                    : null,
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: Color.fromRGBO(65, 150, 240,
-                          100)), // Set focused border color to blue
+                      color: _isNewPasswordValid
+                          ? Color.fromRGBO(65, 150, 240, 100)
+                          : Colors.red),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: Color.fromRGBO(171, 190, 209,
-                          25)), // Set enabled border color to blue
+                      color: _isNewPasswordValid ? Colors.grey : Colors.red),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                     vertical: 16, horizontal: 16), // Adjust padding

@@ -116,3 +116,42 @@ Future<List<Reference>?> getUserUploadedFiles() async {
     return null;
   }
 }
+
+Future<void> uploadProfileImage(XFile imageFile) async {
+  if (imageFile == null) {
+    print('No image selected.');
+    return;
+  }
+
+  File file = File(imageFile.path);
+  try {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) throw Exception("User ID is null");
+
+    final storageRef = FirebaseStorage.instance.ref();
+
+    final uploadRef = storageRef.child('$userId/profile/profile_image.jpg');
+
+    await uploadRef.putFile(file);
+    print('Profile image uploaded successfully.');
+  } catch (e) {
+    print('Error uploading profile image: $e');
+  }
+}
+
+Future<List<Reference>?> getUserUploadedProfileImage() async {
+  try {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      print('No user logged in');
+      return null;
+    }
+
+    final storageRef = FirebaseStorage.instance.ref();
+    final list = await storageRef.child('$userId/profile/').list();
+    return list.items;
+  } catch (e) {
+    print('Error getting user uploaded profile image: $e');
+    return null;
+  }
+}

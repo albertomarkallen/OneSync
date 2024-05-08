@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:onesync/navigation.dart';
 import 'package:onesync/screens/Profile/profile_screen.dart';
 
-class SuccessUpdatedPassword extends StatelessWidget {
-  void _handleBackToLogin(BuildContext context) {
+class SuccessUpdatedStoreName extends StatelessWidget {
+  void _handleBackToProfile(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => ProfileScreen()),
     );
@@ -58,7 +58,7 @@ class SuccessUpdatedPassword extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text(
-              'Password Updated!',
+              'Store Name Updated!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 32,
@@ -67,7 +67,7 @@ class SuccessUpdatedPassword extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              'Your password has been changed successfully.',
+              'Your store name has been updated successfully.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -75,7 +75,7 @@ class SuccessUpdatedPassword extends StatelessWidget {
             ),
             SizedBox(height: 120),
             ElevatedButton(
-              onPressed: () => _handleBackToLogin(context),
+              onPressed: () => _handleBackToProfile(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF0671E0),
               ),
