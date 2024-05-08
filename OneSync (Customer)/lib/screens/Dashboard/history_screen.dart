@@ -215,7 +215,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ? Colors.green
                               : isOrder
                                   ? Colors.red
-                                  : Colors.black, // Apply color based on type
+                                  : Colors.green, // Apply color based on type
                           fontWeight: FontWeight.w500,
                           fontSize: 16.0)),
                   const SizedBox(height: 8),
