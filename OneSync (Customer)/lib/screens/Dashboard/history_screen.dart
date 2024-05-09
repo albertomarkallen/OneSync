@@ -69,8 +69,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
         return AlertDialog(
           title: isNewType
-              ? const Text('Transaction Details')
-              : const Text('Transaction Details'),
+              ? Text(
+                  'Transaction Details',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF212121),
+                    fontSize: 18,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                )
+              : Text(
+                  'Transaction Details',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF212121),
+                    fontSize: 18,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
