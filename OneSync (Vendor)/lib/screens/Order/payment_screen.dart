@@ -187,7 +187,8 @@ class _PaymentScreenPageState extends State<PaymentScreenPage> {
               .toList(),
           'rfid': _rfidUid,
           'currentUid': currentUid,
-          'type': 'order'
+          'type': 'order',
+          'transactionId': transactionId
         };
 
         transaction.set(
